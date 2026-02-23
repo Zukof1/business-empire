@@ -388,9 +388,14 @@ const ui = {
                         <div class="font-mono text-sm sm:text-base font-bold ${colorClass} transition-colors">
                             ${icon} ${this.formatMoney(price)}
                         </div>
-                        <button onclick="window.logic.buyStock('${s.id}')" class="mt-1 px-4 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
-                            BUY
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="window.logic.sellStock('${s.id}')" class="mt-1 px-4 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all ${port.shares <= 0 ? 'hidden' : ''}">
+                                SELL
+                            </button>
+                            <button onclick="window.logic.buyStock('${s.id}')" class="mt-1 px-4 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
+                                BUY
+                            </button>
+                        </div>
                     </div>
                 </div>
                 ${plHtml}

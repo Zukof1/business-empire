@@ -96,6 +96,32 @@ const logic = {
         }
     },
 
+    sellStock(sym) {
+        if (!window.state.portfolio[sym] || window.state.portfolio[sym].shares <= 0) return;
+
+        const price = stockPrices[sym];
+        const port = window.state.portfolio[sym];
+
+        // Add money to balance
+        window.state.balance += price;
+
+        // Calculate average price before selling to correctly adjust totalSpent
+        const avgPrice = port.totalSpent / port.shares;
+
+        // Decrement shares
+        port.shares -= 1;
+        port.totalSpent -= avgPrice; // Reduce totalSpent proportionally
+
+        // Clean up empty portfolios
+        if (port.shares <= 0) {
+            delete window.state.portfolio[sym];
+        }
+
+        if (window.ui && window.ui.triggerBalancePulse) window.ui.triggerBalancePulse('green');
+        if (window.ui && window.ui.renderMarket) window.ui.renderMarket();
+        if (window.ui && window.ui.updateUI) window.ui.updateUI();
+    },
+
     doWork(e) {
         const yieldVal = this.getClickValue();
         this.addMoney(yieldVal);
