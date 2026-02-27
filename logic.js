@@ -171,9 +171,22 @@ const logic = {
     },
 
     doWork(e) {
+        let totalBiz = 0;
+        if (window.state.businesses) {
+            Object.values(window.state.businesses).forEach(v => totalBiz += v);
+        } else {
+            totalBiz = window.state.retailStores || 0;
+        }
+
+        if (window.state.totalClicks >= 100 && totalBiz === 0) {
+            if (window.ui) window.ui.showToast('Acquire a Retail Syndicate to continue!');
+            return;
+        }
+
         const yieldVal = this.getClickValue();
         this.addMoney(yieldVal);
         window.state.totalClicks++;
+
         if (window.ui) {
             window.ui.triggerBalancePulse('green');
             window.ui.updateUI();
