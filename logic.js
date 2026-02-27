@@ -234,28 +234,35 @@ const logic = {
     },
 
     buyBusiness(id) {
-        if (!window.state.businesses) window.state.businesses = {};
+        try {
+            if (!window.state.businesses) window.state.businesses = {};
 
-        // Migration for retail
-        if (id === 'retail' && !window.state.businesses.retail && window.state.retailStores > 0) {
-            window.state.businesses.retail = window.state.retailStores || 0;
-        }
-
-        const cost = this.getBusinessCost(id);
-        if (window.state.balance >= cost) {
-            window.state.balance -= cost;
-            window.state.businesses[id] = (window.state.businesses[id] || 0) + 1;
-
-            // Sync legacy
-            if (id === 'retail') window.state.retailStores = window.state.businesses.retail;
-
-            const b = BUSINESS_DATA.find(x => x.id === id);
-            this.logEvent(`Acquired ${b.name} for $${window.ui ? window.ui.formatMoney(cost) : cost.toFixed(2)}`, "text-amber-400");
-
-            if (window.ui) {
-                window.ui.renderBusinesses();
-                window.ui.updateUI();
+            // Migration for retail
+            if (id === 'retail' && !window.state.businesses.retail && window.state.retailStores > 0) {
+                window.state.businesses.retail = window.state.retailStores || 0;
             }
+
+            const cost = this.getBusinessCost(id);
+            if (window.state.balance >= cost) {
+                window.state.balance -= cost;
+                window.state.businesses[id] = (window.state.businesses[id] || 0) + 1;
+
+                // Sync legacy
+                if (id === 'retail') window.state.retailStores = window.state.businesses.retail;
+
+                const b = BUSINESS_DATA.find(x => x.id === id);
+                this.logEvent(`Acquired ${b.name} for $${window.ui ? window.ui.formatMoney(cost) : cost.toFixed(2)}`, "text-amber-400");
+
+                if (window.ui) {
+                    window.ui.renderBusinesses();
+                    window.ui.updateUI();
+                }
+            } else {
+                if (window.ui) window.ui.showToast(`Not enough funds. Need $${window.ui.formatMoney(cost - window.state.balance)} more.`);
+            }
+        } catch (e) {
+            if (window.ui) window.ui.showToast('Error: ' + e.message);
+            console.error("buyBusiness error:", e);
         }
     },
 
