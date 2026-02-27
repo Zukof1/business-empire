@@ -1016,28 +1016,66 @@ const ui = {
     },
 
     createParticle(e, text) {
+        if (!this.particleContainer) {
+            this.particleContainer = document.createElement('div');
+            this.particleContainer.className = 'absolute inset-0 pointer-events-none z-50 overflow-hidden';
+            document.body.appendChild(this.particleContainer);
+        }
+
         const particle = document.createElement('div');
         particle.innerText = text;
-        particle.className = 'absolute text-amber-500 font-bold text-lg pointer-events-none particle z-50 drop-shadow-md';
 
-        const rect = this.elements.workBtn?.getBoundingClientRect();
-        if (!rect) return;
+        // Randomize slight colors and sizes for better game feel
+        const colors = ['text-emerald-400', 'text-amber-400', 'text-yellow-300'];
+        const rColor = colors[Math.floor(Math.random() * colors.length)];
 
+        // We use a custom inline style for starting position and CSS variables for animation
+        particle.className = `absolute font-black text-xl drop-shadow-md pointer-events-none z-50 ${rColor}`;
+
+        // Support enter key presses (client 0,0) by falling back to the center of the button
         let startX = e.clientX;
         let startY = e.clientY;
 
-        if (e.clientX === 0 && e.clientY === 0) {
+        if (e.clientX === 0 && e.clientY === 0 && e.target) {
+            const rect = e.target.getBoundingClientRect();
             startX = rect.left + rect.width / 2;
             startY = rect.top + rect.height / 2;
         }
 
-        const rx = (Math.random() - 0.5) * 60;
-        const ry = (Math.random() - 0.5) * 30;
+        // Slight randomization so multiple clicks don't perfectly overlap
+        const rx = (Math.random() - 0.5) * 40;
+        const ry = (Math.random() - 0.5) * 20;
 
         particle.style.left = `${startX + rx}px`;
-        particle.style.top = `${startY + ry - 20}px`;
+        particle.style.top = `${startY + ry}px`;
 
-        document.body.appendChild(particle);
+        // CSS Animation logic
+        particle.style.animation = 'floatUp 0.8s ease-out forwards';
+
+        // Add dynamic keyframes style once if not present
+        if (!document.getElementById('particle-styles')) {
+            const style = document.createElement('style');
+            style.id = 'particle-styles';
+            style.innerHTML = `
+                @keyframes floatUp {
+                    0% {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                    }
+                    50% {
+                        opacity: 0.8;
+                        transform: translateY(-40px) scale(1.1);
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: translateY(-80px) scale(0.9);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        this.particleContainer.appendChild(particle);
         setTimeout(() => particle.remove(), 800);
     }
 };
