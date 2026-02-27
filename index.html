@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Business Empire: Banking</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -357,156 +357,254 @@
             </div>
 
             <div id="casinoContent" class="hidden space-y-8">
-                <!-- Slots -->
-                <section>
-                    <div class="flex items-center justify-between px-1 mb-2">
-                        <h2 class="text-violet-400 text-xs font-bold uppercase tracking-widest">High-Limit Slots</h2>
-                    </div>
-                    <div
-                        class="bg-violet-950/50 border border-violet-800/80 p-5 rounded-2xl shadow-[0_0_15px_rgba(139,92,246,0.15)] flex flex-col items-center">
-                        <div
-                            class="flex gap-4 mb-4 text-4xl bg-slate-950 p-4 rounded-xl border-y border-violet-500/50 w-full justify-center shadow-inner mt-2 h-[80px] overflow-hidden">
-                            <div id="slot1-container" class="flex flex-col items-center justify-start"><span id="slot1"
-                                    class="h-10">❓</span></div>
-                            <div id="slot2-container" class="flex flex-col items-center justify-start"><span id="slot2"
-                                    class="h-10">❓</span></div>
-                            <div id="slot3-container" class="flex flex-col items-center justify-start"><span id="slot3"
-                                    class="h-10">❓</span></div>
+                <!-- Casino Lobby -->
+                <div id="casinoLobby" class="flex flex-col gap-4">
+                    <button id="btnOpenSlots"
+                        class="w-full relative group overflow-hidden rounded-2xl p-[1px] transform transition-all hover:scale-[1.01] active:scale-[0.97] mb-2 shadow-[0_4px_20px_rgba(217,70,239,0.15)] hover:shadow-[0_8px_30px_rgba(217,70,239,0.25)]">
+                        <div class="absolute inset-0 bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-700">
                         </div>
-                        <p id="slotResult" class="text-xs font-bold uppercase tracking-widest h-4 mb-4 text-violet-300">
-                        </p>
-                        <div class="flex gap-2 w-full mb-3">
-                            <span class="text-xs text-slate-400 font-bold uppercase self-center basis-1/3">Your
-                                Bet:</span>
-                            <div class="flex-1 relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-                                <input type="number" id="slotsBetInput" value="100" min="10"
-                                    class="w-full bg-slate-900 border border-violet-800 text-white py-2 pl-7 pr-3 rounded-xl text-sm font-mono font-bold outline-none focus:border-violet-500 transition-colors">
+                        <div
+                            class="relative bg-gradient-to-b from-violet-600 to-fuchsia-700 rounded-2xl px-5 py-6 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-3xl shadow-inner backdrop-blur-sm border border-white/30 text-white">
+                                    🎰</div>
+                                <div class="flex flex-col text-left">
+                                    <span
+                                        class="text-white font-bold text-xl tracking-wide uppercase drop-shadow-sm">High-Limit
+                                        Slots</span>
+                                    <span
+                                        class="text-fuchsia-100 text-xs font-medium uppercase tracking-widest mt-1">Spin
+                                        to Win</span>
+                                </div>
                             </div>
                         </div>
-                        <button id="spinSlotsBtn"
-                            class="w-full py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-[0_0_15px_rgba(217,70,239,0.3)] disabled:opacity-50">
-                            Spin
-                        </button>
-                    </div>
-                </section>
+                    </button>
 
-                <section>
-                    <div class="flex items-center justify-between px-1 mb-2">
-                        <h2 class="text-violet-400 text-xs font-bold uppercase tracking-widest">CSGO Roulette</h2>
-                    </div>
-                    <div
-                        class="bg-violet-950/50 border border-violet-800/80 p-4 rounded-2xl shadow-[0_0_15px_rgba(139,92,246,0.15)] flex flex-col items-center w-full overflow-hidden">
-
-                        <!-- Roulette Wheel -->
+                    <button id="btnOpenRoulette"
+                        class="w-full relative group overflow-hidden rounded-2xl p-[1px] transform transition-all hover:scale-[1.01] active:scale-[0.97] mb-2 shadow-[0_4px_20px_rgba(234,179,8,0.15)] hover:shadow-[0_8px_30px_rgba(234,179,8,0.25)]">
+                        <div class="absolute inset-0 bg-gradient-to-br from-amber-400 via-amber-500 to-orange-600">
+                        </div>
                         <div
-                            class="relative w-full h-20 bg-gray-800 rounded-xl border-y border-violet-500/50 mb-3 overflow-hidden shadow-[inset_0_4px_10px_rgba(0,0,0,0.6)] flex items-center">
-                            <!-- Needle -->
+                            class="relative bg-gradient-to-b from-amber-500 to-orange-600 rounded-2xl px-5 py-6 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-14 h-14 rounded-full bg-slate-900/40 flex items-center justify-center text-3xl shadow-inner backdrop-blur-sm border border-white/30 text-white">
+                                    🎡</div>
+                                <div class="flex flex-col text-left">
+                                    <span
+                                        class="text-white font-bold text-xl tracking-wide uppercase drop-shadow-sm">Roulette</span>
+                                    <span class="text-amber-100 text-xs font-medium uppercase tracking-widest mt-1">Red
+                                        or Black?</span>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button id="btnOpenBlackjack"
+                        class="w-full relative group overflow-hidden rounded-2xl p-[1px] transform transition-all hover:scale-[1.01] active:scale-[0.97] mb-2 shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.25)]">
+                        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-green-700">
+                        </div>
+                        <div
+                            class="relative bg-gradient-to-b from-emerald-600 to-teal-700 rounded-2xl px-5 py-6 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-14 h-14 rounded-full bg-slate-900/40 flex items-center justify-center text-3xl shadow-inner backdrop-blur-sm border border-white/30 text-emerald-300">
+                                    🃏</div>
+                                <div class="flex flex-col text-left">
+                                    <span
+                                        class="text-white font-bold text-xl tracking-wide uppercase drop-shadow-sm">VIP
+                                        Blackjack</span>
+                                    <span class="text-teal-100 text-xs font-medium uppercase tracking-widest mt-1">Beat
+                                        the Dealer</span>
+                                </div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Slots View -->
+                <div id="casinoSlotsView" class="hidden flex flex-col gap-6">
+                    <button
+                        class="btnBackToLobby w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 border border-slate-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg> Back to Lobby
+                    </button>
+                    <section>
+                        <div class="flex items-center justify-between px-1 mb-2">
+                            <h2 class="text-violet-400 text-xs font-bold uppercase tracking-widest">High-Limit Slots
+                            </h2>
+                        </div>
+                        <div
+                            class="bg-violet-950/50 border border-violet-800/80 p-5 rounded-2xl shadow-[0_0_15px_rgba(139,92,246,0.15)] flex flex-col items-center">
                             <div
-                                class="absolute left-1/2 top-0 bottom-0 w-1 bg-white z-10 -ml-[2px] shadow-[0_0_10px_white]">
+                                class="flex gap-4 mb-4 text-4xl bg-slate-950 p-4 rounded-xl border-y border-violet-500/50 w-full justify-center shadow-inner mt-2 h-[80px] overflow-hidden">
+                                <div id="slot1-container" class="flex flex-col items-center justify-start"><span
+                                        id="slot1" class="h-10">❓</span></div>
+                                <div id="slot2-container" class="flex flex-col items-center justify-start"><span
+                                        id="slot2" class="h-10">❓</span></div>
+                                <div id="slot3-container" class="flex flex-col items-center justify-start"><span
+                                        id="slot3" class="h-10">❓</span></div>
                             </div>
-                            <!-- Track -->
-                            <div id="rouletteRail" class="flex h-full roulette-track">
-                                <!-- Track elements injected via JS -->
+                            <p id="slotResult"
+                                class="text-xs font-bold uppercase tracking-widest h-4 mb-4 text-violet-300">
+                            </p>
+                            <div class="flex gap-2 w-full mb-3">
+                                <span class="text-xs text-slate-400 font-bold uppercase self-center basis-1/3">Your
+                                    Bet:</span>
+                                <div class="flex-1 relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                    <input type="number" id="slotsBetInput" value="100" min="10"
+                                        class="w-full bg-slate-900 border border-violet-800 text-white py-2 pl-7 pr-3 rounded-xl text-sm font-mono font-bold outline-none focus:border-violet-500 transition-colors">
+                                </div>
                             </div>
-                        </div>
-
-                        <!-- Roulette History -->
-                        <div class="w-full bg-slate-900 rounded-lg border border-violet-800/50 p-2 mb-3">
-                            <div class="flex items-center justify-between mb-1">
-                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Previous
-                                    Rolls</span>
-                            </div>
-                            <div id="rouletteHistory" class="flex gap-1 overflow-x-auto no-scrollbar items-center h-6">
-                                <!-- History injected here -->
-                            </div>
-                        </div>
-
-                        <p id="rouletteResult"
-                            class="text-xs font-bold uppercase tracking-widest h-4 mb-4 text-slate-300">Place your bet
-                        </p>
-
-                        <div class="flex gap-2 w-full mb-3">
-                            <span class="text-xs text-slate-400 font-bold uppercase self-center basis-1/3">Your
-                                Bet:</span>
-                            <div class="flex-1 relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-                                <input type="number" id="rouletteBetInput" value="500" min="10"
-                                    class="w-full bg-slate-900 border border-violet-800 text-white py-2 pl-7 pr-3 rounded-xl text-sm font-mono font-bold outline-none focus:border-violet-500 transition-colors">
-                            </div>
-                        </div>
-
-                        <div class="flex gap-2 w-full">
-                            <button id="btnBetRed"
-                                class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_10px_rgba(220,38,38,0.4)] disabled:opacity-50">
-                                Red (2x)
-                            </button>
-                            <button id="btnBetGold"
-                                class="w-16 py-3 px-1 bg-gradient-to-br from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-yellow-950 border border-yellow-300 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-[0_0_10px_rgba(234,179,8,0.4)] disabled:opacity-50 flex items-center justify-center shrink-0">
-                                Gold
-                            </button>
-                            <button id="btnBetBlack"
-                                class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white border border-slate-600 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_10px_rgba(0,0,0,0.5)] disabled:opacity-50">
-                                Black (2x)
+                            <button id="spinSlotsBtn"
+                                class="w-full py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-[0_0_15px_rgba(217,70,239,0.3)] disabled:opacity-50">
+                                Spin
                             </button>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
 
-                <!-- Blackjack -->
-                <section>
-                    <div class="flex items-center justify-between px-1 mb-2">
-                        <h2 class="text-violet-400 text-xs font-bold uppercase tracking-widest">VIP Blackjack</h2>
-                    </div>
-                    <div
-                        class="bg-violet-950/50 border border-violet-800/80 p-4 rounded-2xl shadow-[0_0_15px_rgba(139,92,246,0.15)] flex flex-col">
+                <!-- Roulette View -->
+                <div id="casinoRouletteView" class="hidden flex flex-col gap-6">
+                    <button
+                        class="btnBackToLobby w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 border border-slate-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg> Back to Lobby
+                    </button>
+                    <section>
+                        <div class="flex items-center justify-between px-1 mb-2">
+                            <h2 class="text-violet-400 text-xs font-bold uppercase tracking-widest">Roulette</h2>
+                        </div>
+                        <div
+                            class="bg-violet-950/50 border border-violet-800/80 p-4 rounded-2xl shadow-[0_0_15px_rgba(139,92,246,0.15)] flex flex-col items-center w-full overflow-hidden">
 
-                        <div id="bjTable" class="hidden flex-col gap-4 mb-4 w-full">
-                            <div class="flex justify-between items-center bg-slate-900/50 p-2 rounded w-full">
-                                <span class="text-xs text-slate-400 font-bold uppercase max-w-[60px]">Dealer: <br><span
-                                        id="bjDealerScore" class="text-white text-base">?</span></span>
-                                <div id="bjDealerHand" class="flex gap-2 min-h-[60px] flex-wrap justify-end"></div>
+                            <!-- Roulette Wheel -->
+                            <div
+                                class="relative w-full h-20 bg-gray-800 rounded-xl border-y border-violet-500/50 mb-3 overflow-hidden shadow-[inset_0_4px_10px_rgba(0,0,0,0.6)] flex items-center">
+                                <!-- Needle -->
+                                <div
+                                    class="absolute left-1/2 top-0 bottom-0 w-1 bg-white z-10 -ml-[2px] shadow-[0_0_10px_white]">
+                                </div>
+                                <!-- Track -->
+                                <div id="rouletteRail" class="flex h-full roulette-track">
+                                    <!-- Track elements injected via JS -->
+                                </div>
                             </div>
-                            <div class="flex justify-between items-center bg-slate-900/50 p-2 rounded w-full">
-                                <span class="text-xs text-slate-400 font-bold uppercase max-w-[60px]">You: <br><span
-                                        id="bjPlayerScore" class="text-white text-base">0</span></span>
-                                <div id="bjPlayerHand" class="flex gap-2 min-h-[60px] flex-wrap justify-end"></div>
+
+                            <!-- Roulette History -->
+                            <div class="w-full bg-slate-900 rounded-lg border border-violet-800/50 p-2 mb-3">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Previous
+                                        Rolls</span>
+                                </div>
+                                <div id="rouletteHistory"
+                                    class="flex gap-1 overflow-x-auto no-scrollbar items-center h-6">
+                                    <!-- History injected here -->
+                                </div>
+                            </div>
+
+                            <p id="rouletteResult"
+                                class="text-xs font-bold uppercase tracking-widest h-4 mb-4 text-slate-300">Place your
+                                bet
+                            </p>
+
+                            <div class="flex gap-2 w-full mb-3">
+                                <span class="text-xs text-slate-400 font-bold uppercase self-center basis-1/3">Your
+                                    Bet:</span>
+                                <div class="flex-1 relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                    <input type="number" id="rouletteBetInput" value="500" min="10"
+                                        class="w-full bg-slate-900 border border-violet-800 text-white py-2 pl-7 pr-3 rounded-xl text-sm font-mono font-bold outline-none focus:border-violet-500 transition-colors">
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 w-full">
+                                <button id="btnBetRed"
+                                    class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_10px_rgba(220,38,38,0.4)] disabled:opacity-50">
+                                    Red (2x)
+                                </button>
+                                <button id="btnBetGreen"
+                                    class="w-16 py-3 px-1 bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 text-emerald-950 border border-emerald-300 rounded-xl font-bold uppercase tracking-widest text-[10px] transition-all shadow-[0_0_10px_rgba(16,185,129,0.4)] disabled:opacity-50 flex items-center justify-center shrink-0">
+                                    Green (7x)
+                                </button>
+                                <button id="btnBetBlack"
+                                    class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white border border-slate-600 rounded-xl font-bold uppercase tracking-widest text-xs transition-all shadow-[0_0_10px_rgba(0,0,0,0.5)] disabled:opacity-50">
+                                    Black (2x)
+                                </button>
                             </div>
                         </div>
+                    </section>
+                </div>
 
-                        <div id="bjBetContainer" class="flex gap-2 w-full mt-2">
-                            <span class="text-xs text-slate-400 font-bold uppercase self-center basis-1/3">Your
-                                Bet:</span>
-                            <div class="flex-1 relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
-                                <input type="number" id="bjBetInput" value="1000" min="10"
-                                    class="w-full bg-slate-900 border border-violet-800 text-white py-2 pl-7 pr-3 rounded-xl text-sm font-mono font-bold outline-none focus:border-violet-500 transition-colors">
+                <!-- Blackjack View -->
+                <div id="casinoBlackjackView" class="hidden flex flex-col gap-6">
+                    <button
+                        class="btnBackToLobby w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-2 border border-slate-700">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg> Back to Lobby
+                    </button>
+                    <section>
+                        <div class="flex items-center justify-between px-1 mb-2">
+                            <h2 class="text-violet-400 text-xs font-bold uppercase tracking-widest">VIP Blackjack</h2>
+                        </div>
+                        <div
+                            class="bg-violet-950/50 border border-violet-800/80 p-4 rounded-2xl shadow-[0_0_15px_rgba(139,92,246,0.15)] flex flex-col">
+
+                            <div id="bjTable" class="hidden flex-col gap-4 mb-4 w-full">
+                                <div class="flex justify-between items-center bg-slate-900/50 p-2 rounded w-full">
+                                    <span class="text-xs text-slate-400 font-bold uppercase max-w-[60px]">Dealer:
+                                        <br><span id="bjDealerScore" class="text-white text-base">?</span></span>
+                                    <div id="bjDealerHand" class="flex gap-2 min-h-[60px] flex-wrap justify-end"></div>
+                                </div>
+                                <div class="flex justify-between items-center bg-slate-900/50 p-2 rounded w-full">
+                                    <span class="text-xs text-slate-400 font-bold uppercase max-w-[60px]">You: <br><span
+                                            id="bjPlayerScore" class="text-white text-base">0</span></span>
+                                    <div id="bjPlayerHand" class="flex gap-2 min-h-[60px] flex-wrap justify-end"></div>
+                                </div>
                             </div>
-                        </div>
 
-                        <p id="bjResult"
-                            class="text-xs font-bold uppercase tracking-widest h-4 mb-4 mt-4 text-center text-slate-300">
-                            Ready to deal</p>
+                            <div id="bjBetContainer" class="flex gap-2 w-full mt-2">
+                                <span class="text-xs text-slate-400 font-bold uppercase self-center basis-1/3">Your
+                                    Bet:</span>
+                                <div class="flex-1 relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                                    <input type="number" id="bjBetInput" value="1000" min="10"
+                                        class="w-full bg-slate-900 border border-violet-800 text-white py-2 pl-7 pr-3 rounded-xl text-sm font-mono font-bold outline-none focus:border-violet-500 transition-colors">
+                                </div>
+                            </div>
 
-                        <div id="bjControlsDeal" class="flex gap-3 w-full">
-                            <button id="btnBjDeal"
-                                class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)] disabled:opacity-50">
-                                Deal
-                            </button>
-                        </div>
-                        <div id="bjControlsPlay" class="hidden flex gap-3 w-full">
-                            <button id="btnBjHit"
-                                class="flex-1 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold uppercase tracking-widest text-xs transition-all">
-                                Hit
-                            </button>
-                            <button id="btnBjStand"
-                                class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 rounded-xl font-bold uppercase tracking-widest text-xs transition-all">
-                                Stand
-                            </button>
-                        </div>
+                            <p id="bjResult"
+                                class="text-xs font-bold uppercase tracking-widest h-4 mb-4 mt-4 text-center text-slate-300">
+                                Ready to deal</p>
 
-                    </div>
-                </section>
+                            <div id="bjControlsDeal" class="flex gap-3 w-full">
+                                <button id="btnBjDeal"
+                                    class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold uppercase tracking-widest text-sm transition-all shadow-[0_0_10px_rgba(16,185,129,0.3)] disabled:opacity-50">
+                                    Deal
+                                </button>
+                            </div>
+                            <div id="bjControlsPlay" class="hidden flex gap-3 w-full">
+                                <button id="btnBetGreen"
+                                    class="flex-1 py-1 rounded bg-amber-500/20 hover:bg-amber-500/40 text-amber-500 font-bold border border-amber-500/50 transition-colors uppercase text-[10px] tracking-wider">
+                                    GreenHit
+                                </button>
+                                <button id="btnBjStand"
+                                    class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 rounded-xl font-bold uppercase tracking-widest text-xs transition-all">
+                                    Stand
+                                </button>
+                            </div>
+
+                        </div>
+                    </section>
+                </div>
             </div>
         </main>
 

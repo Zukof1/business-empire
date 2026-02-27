@@ -241,7 +241,7 @@ const logic = {
             const pattern = ['R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'G'];
             const resultIdx = Math.floor(Math.random() * pattern.length);
             const resultColorCode = pattern[resultIdx];
-            let resultColorName = resultColorCode === 'R' ? 'Red' : (resultColorCode === 'B' ? 'Black' : 'Gold');
+            let resultColorName = resultColorCode === 'R' ? 'Red' : (resultColorCode === 'B' ? 'Black' : 'Green');
 
             const win = color === resultColorName;
 
@@ -253,7 +253,7 @@ const logic = {
             let logColor = '';
 
             if (win) {
-                payout = color === 'Gold' ? bet * 7 : bet * 2;
+                payout = color === 'Green' ? bet * 7 : bet * 2;
                 msg = `Won! +$${(payout - bet).toLocaleString()} (${color})`;
                 tColor = "text-emerald-400";
                 logMsg = `Roulette Win: +$${payout.toLocaleString()}`;
@@ -281,7 +281,7 @@ const logic = {
                     if (window.ui) window.ui.triggerBalancePulse('red');
                 }
                 if (window.ui) window.ui.updateUI();
-            }, 4000);
+            }, 6000);
         }
     },
 

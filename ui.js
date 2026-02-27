@@ -55,9 +55,18 @@ const ui = {
             rouletteBetInput: document.getElementById('rouletteBetInput'),
             btnBetRed: document.getElementById('btnBetRed'),
             btnBetBlack: document.getElementById('btnBetBlack'),
-            btnBetGold: document.getElementById('btnBetGold'),
+            btnBetGreen: document.getElementById('btnBetGreen'),
 
             bjTable: document.getElementById('bjTable'),
+
+            casinoLobby: document.getElementById('casinoLobby'),
+            btnOpenSlots: document.getElementById('btnOpenSlots'),
+            btnOpenRoulette: document.getElementById('btnOpenRoulette'),
+            btnOpenBlackjack: document.getElementById('btnOpenBlackjack'),
+            casinoSlotsView: document.getElementById('casinoSlotsView'),
+            casinoRouletteView: document.getElementById('casinoRouletteView'),
+            casinoBlackjackView: document.getElementById('casinoBlackjackView'),
+            btnBackToLobby: document.querySelectorAll('.btnBackToLobby'), // Nodelist
             bjDealerScore: document.getElementById('bjDealerScore'),
             bjDealerHand: document.getElementById('bjDealerHand'),
             bjPlayerScore: document.getElementById('bjPlayerScore'),
@@ -143,9 +152,9 @@ const ui = {
             const bet = parseInt(el.rouletteBetInput?.value) || 10;
             l.playRoulette('Black', bet);
         });
-        el.btnBetGold?.addEventListener('click', () => {
+        el.btnBetGreen?.addEventListener('click', () => {
             const bet = parseInt(el.rouletteBetInput?.value) || 10;
-            l.playRoulette('Gold', bet);
+            l.playRoulette('Green', bet);
         });
         el.btnBjDeal?.addEventListener('click', () => {
             const bet = parseInt(el.bjBetInput?.value) || 10;
@@ -159,6 +168,38 @@ const ui = {
         el.sellCarBtn?.addEventListener('click', () => l.sellCar());
 
         el.saveIndicator?.addEventListener('click', () => window.hardReset());
+
+        // Casino sub-navigation
+        el.btnOpenSlots?.addEventListener('click', () => this.showCasinoView('slots'));
+        el.btnOpenRoulette?.addEventListener('click', () => {
+            this.showCasinoView('roulette');
+            this.initRouletteWheel(); // Intentionally recreate the wheel now that the element is unhidden
+        });
+        el.btnOpenBlackjack?.addEventListener('click', () => this.showCasinoView('blackjack'));
+
+        if (el.btnBackToLobby) {
+            el.btnBackToLobby.forEach(btn => btn.addEventListener('click', () => this.showCasinoLobby()));
+        }
+    },
+
+    showCasinoLobby() {
+        const el = this.elements;
+        if (el.casinoLobby) el.casinoLobby.classList.remove('hidden');
+        if (el.casinoSlotsView) el.casinoSlotsView.classList.add('hidden');
+        if (el.casinoRouletteView) el.casinoRouletteView.classList.add('hidden');
+        if (el.casinoBlackjackView) el.casinoBlackjackView.classList.add('hidden');
+    },
+
+    showCasinoView(viewName) {
+        const el = this.elements;
+        if (el.casinoLobby) el.casinoLobby.classList.add('hidden');
+        if (el.casinoSlotsView) el.casinoSlotsView.classList.add('hidden');
+        if (el.casinoRouletteView) el.casinoRouletteView.classList.add('hidden');
+        if (el.casinoBlackjackView) el.casinoBlackjackView.classList.add('hidden');
+
+        if (viewName === 'slots' && el.casinoSlotsView) el.casinoSlotsView.classList.remove('hidden');
+        if (viewName === 'roulette' && el.casinoRouletteView) el.casinoRouletteView.classList.remove('hidden');
+        if (viewName === 'blackjack' && el.casinoBlackjackView) el.casinoBlackjackView.classList.remove('hidden');
     },
 
     formatMoney(amount) {
@@ -248,6 +289,9 @@ const ui = {
                 el.casinoBadge?.classList.add('hidden');
                 el.casinoGate?.classList.add('hidden');
                 el.casinoContent?.classList.remove('hidden');
+                this.showCasinoLobby();
+                if (!window.state.rouletteHistory) window.state.rouletteHistory = [];
+                this.initRouletteWheel();
                 this.renderBlackjack();
             } else {
                 el.casinoBadge?.classList.remove('hidden');
@@ -439,11 +483,17 @@ const ui = {
                 c.el.parentElement.classList.remove('spinning');
             }
 
+            // Calculate number of items for constant velocity across different durations
+            const numItems = Math.floor(c.time * 25);
             let reelHtml = '<div class="reel-inner flex flex-col items-center w-full">';
-            for (let i = 0; i < 30; i++) {
+            // Padding item so bounce doesn't expose empty space at the top
+            reelHtml += `<span class="h-10 flex items-center justify-center">${symbols[Math.floor(Math.random() * symbols.length)]}</span>`;
+            // The actual target symbol
+            reelHtml += `<span class="h-10 flex items-center justify-center">${c.val}</span>`;
+            // Random blurring items below
+            for (let i = 0; i < numItems; i++) {
                 reelHtml += `<span class="h-10 flex items-center justify-center">${symbols[Math.floor(Math.random() * symbols.length)]}</span>`;
             }
-            reelHtml += `<span class="h-10 flex items-center justify-center">${c.val}</span>`;
             reelHtml += '</div>';
 
             c.el.innerHTML = reelHtml;
@@ -457,21 +507,27 @@ const ui = {
 
             void inner.offsetWidth;
 
-            // Calculate precise end position to center the last item exactly
-            // The distance is the top of the last element minus half the remaining space in the container
             const itemHeight = inner.lastElementChild.offsetHeight || 40;
-            const targetY = inner.scrollHeight - itemHeight; // Top of the last item
             const containerHeight = c.el.offsetHeight || 48;
             const offset = (containerHeight - itemHeight) / 2;
-            const endPos = -(targetY - offset);
+
+            // Start at the bottom (showing the last generated random items)
+            const startPos = -(inner.scrollHeight - containerHeight);
+            // End matching the target (index 1 = itemHeight)
+            const endPos = -(itemHeight - offset);
 
             inner.style.setProperty('--spin-duration', `${c.time}s`);
+            inner.style.setProperty('--reel-start-position', `${startPos}px`);
             inner.style.setProperty('--reel-end-position', `${endPos}px`);
             inner.classList.add('slot-reel');
-            inner.style.animation = `reelSpin ${c.time}s cubic-bezier(0.1, 0.9, 0.2, 1) forwards`;
+            inner.style.animation = `reelSpin ${c.time}s cubic-bezier(0.1, 0.1, 0.2, 1) forwards`;
 
             setTimeout(() => {
+                inner.classList.remove('slot-reel');
                 inner.classList.add('slot-reel-stop');
+                inner.style.animation = 'none';
+                void inner.offsetWidth;
+                inner.style.animation = `slot-clunk 0.3s ease-out forwards`;
                 c.el.classList.remove('spinning');
             }, c.time * 1000);
         });
@@ -488,18 +544,11 @@ const ui = {
         const track = document.getElementById('rouletteRail');
         if (!track) return;
         track.innerHTML = '';
-        // American Roulette wheel numbers and their colors
+        // 15-tile CSGO pattern (1 Green, 7 Red, 7 Black alternating)
         const wheelSequence = [
-            { num: '0', color: 'G' }, { num: '28', color: 'B' }, { num: '9', color: 'R' }, { num: '26', color: 'B' },
-            { num: '30', color: 'R' }, { num: '11', color: 'B' }, { num: '7', color: 'R' }, { num: '20', color: 'B' },
-            { num: '32', color: 'R' }, { num: '17', color: 'B' }, { num: '5', color: 'R' }, { num: '22', color: 'B' },
-            { num: '34', color: 'R' }, { num: '15', color: 'B' }, { num: '3', color: 'R' }, { num: '24', color: 'B' },
-            { num: '36', color: 'R' }, { num: '13', color: 'B' }, { num: '1', color: 'R' }, { num: '00', color: 'G' },
-            { num: '27', color: 'R' }, { num: '10', color: 'B' }, { num: '25', color: 'R' }, { num: '29', color: 'B' },
-            { num: '12', color: 'R' }, { num: '8', color: 'B' }, { num: '19', color: 'R' }, { num: '31', color: 'B' },
-            { num: '18', color: 'R' }, { num: '6', color: 'B' }, { num: '21', color: 'R' }, { num: '33', color: 'B' },
-            { num: '16', color: 'R' }, { num: '4', color: 'B' }, { num: '23', color: 'R' }, { num: '35', color: 'B' },
-            { num: '14', color: 'R' }, { num: '2', color: 'B' }
+            { color: 'G' }, { color: 'R' }, { color: 'B' }, { color: 'R' }, { color: 'B' },
+            { color: 'R' }, { color: 'B' }, { color: 'R' }, { color: 'B' }, { color: 'R' },
+            { color: 'B' }, { color: 'R' }, { color: 'B' }, { color: 'R' }, { color: 'B' }
         ];
 
         let fullTrack = [];
@@ -518,20 +567,16 @@ const ui = {
 
             let imageUrl = '';
             if (item.color === 'R') {
-                imageUrl = `./assets/roulette_red.png`;
+                imageUrl = `./Assets/roulette_red.png`;
             } else if (item.color === 'B') {
-                imageUrl = `./assets/roulette_black.png`;
+                imageUrl = `./Assets/roulette_black.png`;
             } else { // Green (0 or 00)
-                imageUrl = `./assets/roulette_green.png`;
+                imageUrl = `./Assets/roulette_green.png`;
             }
             div.style.backgroundImage = `url('${imageUrl}')`;
 
-            // Render the number over top of the custom PNG
-            div.innerText = item.num;
-
             div.dataset.idx = idx;
             div.dataset.color = item.color;
-            div.dataset.number = item.num;
             track.appendChild(div);
         });
         track.style.transform = "translateX(0px)";
@@ -546,45 +591,52 @@ const ui = {
         }
 
         if (track && resultType) {
-            // Determine target based on resultType (e.g., 'Red', 'Black', '0', '00')
+            // Determine target based on resultType (e.g., 'Red', 'Black', 'Green')
             let targetColorCode = '';
-            let targetNumber = '';
 
             if (resultType === 'Red') targetColorCode = 'R';
             else if (resultType === 'Black') targetColorCode = 'B';
-            else if (resultType === '0' || resultType === '00') targetNumber = resultType;
-            else { // If resultType is a number like '1', '2', etc.
-                targetNumber = resultType;
-                // We'll find its color from the dataset later
-            }
+            else if (resultType === '0' || resultType === '00' || resultType === 'Green') targetColorCode = 'G';
 
             const items = track.children;
             let possibleTargetIndices = [];
 
             for (let i = 0; i < items.length; i++) {
                 const item = items[i];
-                if (targetNumber && item.dataset.number === targetNumber) {
-                    possibleTargetIndices.push(i);
-                } else if (targetColorCode && item.dataset.color === targetColorCode) {
+                if (targetColorCode && item.dataset.color === targetColorCode) {
                     possibleTargetIndices.push(i);
                 }
             }
 
-            // Pick a target index from the last full sequence to ensure it's visible and not too far
-            const wheelSequenceLength = 38; // Number of unique tiles on the wheel
-            const lastSequenceStartIdx = items.length - wheelSequenceLength;
-
-            let filteredIndices = possibleTargetIndices.filter(idx => idx >= lastSequenceStartIdx);
-            if (filteredIndices.length === 0) { // Fallback if no match in the last sequence (shouldn't happen with correct data)
-                filteredIndices = possibleTargetIndices;
-            }
-
-            // Select a random target from the filtered indices
-            let targetIdx = filteredIndices[Math.floor(Math.random() * filteredIndices.length)];
-            if (targetIdx === undefined) targetIdx = items.length - 1; // Fallback
-
             // Updated tile width: w-16 = 64px + 4px mx margins = 68px total width
             const itemWidth = 68;
+
+            // Start offset is the continuous teleport distance
+            let startPos = 0;
+            const sequenceWidth = 15 * itemWidth; // 15 tiles per sequence
+            let sequencesToShift = 0;
+            if (track.dataset.currentDist !== undefined) {
+                let prevDist = parseFloat(track.dataset.currentDist);
+                // Shift by multiples of full sequences until we are near the front again
+                sequencesToShift = Math.floor(Math.abs(prevDist) / sequenceWidth);
+                startPos = prevDist + (sequencesToShift * sequenceWidth);
+            }
+
+            // To spin forward continuously, the target must be ahead of the startPos
+            // The startPos is near index 0. We want to spin ahead by a few sequences.
+            // Let's target the exact result item in the 4th sequence from the start.
+            const targetSequenceOffset = 3; // Spin 3 full sequences ahead
+
+            // Find all indices perfectly matching the color in the base sequence (0-14)
+            let baseIndices = possibleTargetIndices.filter(idx => idx < 15);
+            if (baseIndices.length === 0) baseIndices = [0];
+
+            // Pick a random matching index from the base sequence
+            let randomBaseIdx = baseIndices[Math.floor(Math.random() * baseIndices.length)];
+
+            // The absolute index is the random base index + the sequences we are spinning past
+            let targetIdx = randomBaseIdx + (targetSequenceOffset * 15);
+
             const randomOffset = Math.floor(Math.random() * 40) - 20;
             // Center calculation: track parent offset / 2, minus half a tile (34)
             const dist = -((targetIdx * itemWidth) + randomOffset) + (track.parentElement.offsetWidth / 2) - 34;
@@ -593,8 +645,9 @@ const ui = {
             track.classList.remove('is-spinning');
             void track.offsetWidth;
 
-            // Set the new target distance as a variable for the keyframe
+            track.style.setProperty('--roulette-start-position', `${startPos}px`);
             track.style.setProperty('--roulette-end-position', `${dist}px`);
+            track.dataset.currentDist = dist;
 
             // Add spinning class
             track.classList.add('is-spinning');
@@ -621,7 +674,7 @@ const ui = {
                         el.rouletteHistory.appendChild(hDiv);
                     });
                 }
-            }, 4000);
+            }, 6000);
         } else if (track) {
             this.initRouletteWheel();
             if (el.rouletteResult) {
@@ -636,7 +689,7 @@ const ui = {
                 this.elements.rouletteResult.innerText = msg;
                 this.elements.rouletteResult.className = `text-xs font-bold uppercase tracking-widest h-4 mb-4 ${color}`;
             }
-        }, 4000);
+        }, 6000);
     },
 
     renderCardSprite(card, isHidden = false, animDelay = 0) {
@@ -740,7 +793,7 @@ const ui = {
         if (el.spinSlotsBtn) el.spinSlotsBtn.disabled = window.state.balance < sBet || sBet < 10;
         if (el.btnBetRed) el.btnBetRed.disabled = window.state.balance < rBet || rBet < 10;
         if (el.btnBetBlack) el.btnBetBlack.disabled = window.state.balance < rBet || rBet < 10;
-        if (el.btnBetGold) el.btnBetGold.disabled = window.state.balance < rBet || rBet < 10;
+        if (el.btnBetGreen) el.btnBetGreen.disabled = window.state.balance < rBet || rBet < 10;
         if (el.btnBjDeal && (!window.state.blackjack || !window.state.blackjack.active)) {
             el.btnBjDeal.disabled = window.state.balance < bBet || bBet < 10;
         }
