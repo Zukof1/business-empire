@@ -122,12 +122,14 @@
 
             <!-- Businesses -->
             <section>
-                <div
-                    class="flex items-end justify-between px-1 mb-2 mt-4 text-xs font-bold uppercase tracking-widest text-slate-500">
-                    <h2>Portfolios</h2>
+                <div class="flex items-end justify-between px-1 mb-2">
+                    <h2 class="text-slate-500 text-xs font-bold uppercase tracking-widest">Portfolios</h2>
+                    <span id="storeCountDisplay"
+                        class="text-emerald-500 font-mono text-xs font-bold bg-emerald-500/10 px-2 py-0.5 rounded">0
+                        Active</span>
                 </div>
 
-                <div id="businessListContainer" class="flex flex-col gap-4"></div>
+                <div id="businessesList" class="flex flex-col gap-3"></div>
             </section>
         </main>
 
@@ -160,11 +162,16 @@
                 <section>
                     <div class="flex items-center justify-between px-1 mb-2">
                         <h2 class="text-slate-500 text-xs font-bold uppercase tracking-widest">Car Dealership</h2>
-                        <span id="garageStatus"
-                            class="text-slate-500 font-mono text-xs font-bold bg-slate-800 px-2 py-0.5 rounded">Empty</span>
+                        <div class="flex items-center gap-2">
+                            <span id="garageStatus"
+                                class="text-slate-500 font-mono text-xs font-bold bg-slate-800 px-2 py-0.5 rounded">0/1
+                                Slots</span>
+                            <button id="buyGarageBtn" onclick="window.logic.buyGarageExpansion()"
+                                class="text-[9px] bg-amber-500/20 text-amber-500 font-bold border border-amber-500/50 px-2 py-0.5 rounded uppercase tracking-wider hover:bg-amber-500/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Expand</button>
+                        </div>
                     </div>
 
-                    <div id="garageListContainer" class="flex flex-col gap-4"></div>
+                    <div id="garageSlotsContainer" class="flex flex-col gap-4"></div>
                 </section>
 
                 <section class="opacity-100 transition-opacity" id="auctionSection">

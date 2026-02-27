@@ -1,10 +1,8 @@
-// Core Constants
-const BUSINESSES = [
-    { id: 'b_hotdog', name: 'Hotdog Stand', icon: '🌭', baseCost: 100, mult: 1.15, income: 2, cVal: 1 },
-    { id: 'b_retail', name: 'Retail Syndicate', icon: '🏪', baseCost: 1500, mult: 1.14, income: 25, cVal: 5 },
-    { id: 'b_office', name: 'Office Complex', icon: '🏢', baseCost: 25000, mult: 1.13, income: 150, cVal: 20 },
-    { id: 'b_tech', name: 'Tech Startup', icon: '💻', baseCost: 500000, mult: 1.11, income: 1200, cVal: 100 },
-    { id: 'b_finance', name: 'Finance Firm', icon: '🏛️', baseCost: 10000000, mult: 1.09, income: 15000, cVal: 500 }
+const BUSINESS_DATA = [
+    { id: 'retail', name: 'Retail Syndicate', icon: '🏪', baseCost: 100, costMult: 1.15, income: 2 },
+    { id: 'startup', name: 'Tech Startup', icon: '💻', baseCost: 2500, costMult: 1.15, income: 60 },
+    { id: 'estate', name: 'Real Estate Firm', icon: '🏢', baseCost: 50000, costMult: 1.15, income: 1500 },
+    { id: 'corp', name: 'Mega Corporation', icon: '🌐', baseCost: 1000000, costMult: 1.15, income: 40000 }
 ];
 
 const RESTORE_TIME_MS = 30000;
@@ -44,28 +42,43 @@ MARKET_DATA.forEach(s => {
 
 // Core Logic Setup
 const logic = {
-    getClickValue() {
-        let val = 1; // Base click
-        BUSINESSES.forEach(b => {
-            const count = window.state.businesses?.[b.id] || 0;
-            if (count > 0) val += (b.cVal * count);
-        });
-        return val;
+    getPrestigeMultiplier() {
+        const count = window.state.prestigeCount || 0;
+        return 1 + (count * 0.10); // +10% per prestige
     },
 
-    getStoreCost(id) {
-        const b = BUSINESSES.find(x => x.id === id);
-        const count = window.state.businesses?.[id] || 0;
-        return b ? b.baseCost * Math.pow(b.mult, count) : 0;
+    getClickValue() {
+        const retailCount = window.state.businesses?.retail || window.state.retailStores || 0;
+
+        let totalBiz = 0;
+        if (window.state.businesses) {
+            Object.values(window.state.businesses).forEach(v => totalBiz += v);
+        } else {
+            totalBiz = window.state.retailStores || 0;
+        }
+
+        const base = Math.floor(retailCount / 10) + Math.floor(totalBiz / 5) + 1;
+        return base * this.getPrestigeMultiplier();
+    },
+
+    getBusinessCost(id) {
+        const b = BUSINESS_DATA.find(x => x.id === id);
+        let count = window.state.businesses?.[id] || 0;
+        if (id === 'retail' && count === 0) count = window.state.retailStores || 0;
+        return b.baseCost * Math.pow(b.costMult, count);
     },
 
     getPassiveIncome() {
-        let total = 0;
-        BUSINESSES.forEach(b => {
+        let income = 0;
+        BUSINESS_DATA.forEach(b => {
             const count = window.state.businesses?.[b.id] || 0;
-            total += (count * b.income);
+            if (b.id === 'retail' && count === 0 && window.state.retailStores > 0) {
+                income += window.state.retailStores * b.income;
+            } else {
+                income += count * b.income;
+            }
         });
-        return total;
+        return income * this.getPrestigeMultiplier();
     },
 
     getPortfolioValue() {
@@ -164,7 +177,7 @@ const logic = {
         if (window.ui) {
             window.ui.triggerBalancePulse('green');
             window.ui.updateUI();
-            window.ui.createParticle(e, `+$${yieldVal}`);
+            window.ui.createParticle(e, `+$${yieldVal.toFixed(2)}`);
         }
     },
 
@@ -189,35 +202,55 @@ const logic = {
         else window.state.rank = 'Novice Hustler';
     },
 
-    buyStore(id) {
-        if (!window.state.businesses) {
-            window.state.businesses = {};
-            // Port over legacy data if updating
-            if (window.state.retailStores) {
-                window.state.businesses['b_retail'] = window.state.retailStores;
-                delete window.state.retailStores;
+    prestige() {
+        if (window.state.lifetimeEarnings >= 1000000) {
+            if (confirm("Are you incredibly sure? You will lose all money, businesses, stocks, and cars for a permanent +10% income multiplier.")) {
+                window.state.prestigeCount = (window.state.prestigeCount || 0) + 1;
+                window.state.balance = 0;
+                window.state.businesses = {};
+                window.state.retailStores = 0;
+                window.state.portfolio = {};
+                window.state.dealerCars = [];
+                window.state.carDealership = null;
+                window.state.hasDealerLicense = false;
+                window.state.hasCasinoMembership = false;
+                window.state.lifetimeEarnings = 0;
+                window.state.totalClicks = 0;
+                window.state.casinoProfitLoss = 0;
+                window.state.garageSlots = 1;
+                window.state.rank = 'Novice Hustler';
+
+                this.logEvent(`Prestiged to Level ${window.state.prestigeCount}!`, "text-amber-400");
+                window.saveGame();
+                location.reload();
             }
-        }
-
-        const cost = this.getStoreCost(id);
-        const b = BUSINESSES.find(x => x.id === id);
-
-        if (b && window.state.balance >= cost) {
-            window.state.balance -= cost;
-            if (!window.state.businesses[id]) window.state.businesses[id] = 0;
-            window.state.businesses[id]++;
-
-            this.logEvent(`Acquired ${b.name} for $${this.formatEventMoney(cost)}`, "text-emerald-400");
-            if (window.ui) window.ui.updateUI();
         }
     },
 
-    formatEventMoney(amount) {
-        if (amount >= 1000000000000) return (amount / 1000000000000).toFixed(2) + 'T';
-        if (amount >= 1000000000) return (amount / 1000000000).toFixed(2) + 'B';
-        if (amount >= 1000000) return (amount / 1000000).toFixed(2) + 'M';
-        if (amount >= 10000) return (amount / 1000).toFixed(1) + 'k';
-        return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    buyBusiness(id) {
+        if (!window.state.businesses) window.state.businesses = {};
+
+        // Migration for retail
+        if (id === 'retail' && !window.state.businesses.retail && window.state.retailStores > 0) {
+            window.state.businesses.retail = window.state.retailStores || 0;
+        }
+
+        const cost = this.getBusinessCost(id);
+        if (window.state.balance >= cost) {
+            window.state.balance -= cost;
+            window.state.businesses[id] = (window.state.businesses[id] || 0) + 1;
+
+            // Sync legacy
+            if (id === 'retail') window.state.retailStores = window.state.businesses.retail;
+
+            const b = BUSINESS_DATA.find(x => x.id === id);
+            this.logEvent(`Acquired ${b.name} for $${this.formatMoney ? this.formatMoney(cost) : cost.toFixed(2)}`, "text-emerald-400");
+
+            if (window.ui) {
+                window.ui.renderBusinesses();
+                window.ui.updateUI();
+            }
+        }
     },
 
     buyLicense() {
@@ -474,18 +507,44 @@ const logic = {
         }
     },
 
-    buyAuction(index) {
-        if (!window.state.carDealership) window.state.carDealership = [];
-        if (window.state.carDealership.length >= 3) return; // Garage full
+    getGarageSlots() {
+        return window.state.garageSlots || 1;
+    },
 
+    getGarageExpansionCost() {
+        const slots = this.getGarageSlots();
+        return 10000 * Math.pow(5, slots - 1);
+    },
+
+    buyGarageExpansion() {
+        const cost = this.getGarageExpansionCost();
+        if (window.state.balance >= cost) {
+            window.state.balance -= cost;
+            window.state.garageSlots = (window.state.garageSlots || 1) + 1;
+            this.logEvent(`Expanded Garage Capacity for $${window.ui ? window.ui.formatMoney(cost) : cost.toFixed(2)}`, "text-amber-400");
+            if (window.ui) {
+                window.ui.renderGarage();
+                window.ui.updateUI();
+            }
+        }
+    },
+
+    buyAuction(index) {
         const car = window.state.auctionCars && window.state.auctionCars[index];
-        if (car && window.state.balance >= car.price) {
+        const slotsAvailable = this.getGarageSlots();
+        if (!window.state.dealerCars) window.state.dealerCars = [];
+        if (window.state.carDealership) {
+            window.state.dealerCars.push(window.state.carDealership);
+            window.state.carDealership = null;
+        }
+
+        if (car && window.state.balance >= car.price && window.state.dealerCars.length < slotsAvailable) {
             window.state.balance -= car.price;
-            this.logEvent(`Bought ${car.name} for $${this.formatEventMoney(car.price)}`, "text-amber-400");
+            this.logEvent(`Bought ${car.name} for $${car.price.toFixed(2)}`, "text-amber-400");
 
             const willHaveFault = Math.random() < FAULT_CHANCE;
 
-            window.state.carDealership.push({
+            window.state.dealerCars.push({
                 name: car.name,
                 icon: car.icon,
                 buyPrice: car.price,
@@ -496,7 +555,8 @@ const logic = {
                 hasHiddenFault: willHaveFault
             });
 
-            window.state.auctionCars = null; // Clear auctions after buying one (occupies slot)
+            // Remove car from auction list
+            window.state.auctionCars.splice(index, 1);
 
             if (window.ui) {
                 window.ui.renderGarage();
@@ -506,15 +566,15 @@ const logic = {
         }
     },
 
-    payForRepair(slotIndex) {
-        if (!window.state.carDealership || !window.state.carDealership[slotIndex]) return;
-        const car = window.state.carDealership[slotIndex];
+    payForRepair(index) {
+        if (!window.state.dealerCars || !window.state.dealerCars[index]) return;
+        const car = window.state.dealerCars[index];
 
         if (car.status === 'needs_repair' && window.state.balance >= REPAIR_COST) {
             window.state.balance -= REPAIR_COST;
             if (window.ui) window.ui.triggerBalancePulse('red');
 
-            car.totalRestoreTimeMs += REPAIR_TIME_EXTENSION_MS;
+            car.totalRestoreTimeMs = REPAIR_TIME_EXTENSION_MS;
             car.restoreEndTime = Date.now() + REPAIR_TIME_EXTENSION_MS;
             car.status = 'restoring';
             car.hasHiddenFault = false;
@@ -528,16 +588,15 @@ const logic = {
         }
     },
 
-    sellCar(slotIndex) {
-        if (!window.state.carDealership || !window.state.carDealership[slotIndex]) return;
-        const car = window.state.carDealership[slotIndex];
+    sellCar(index) {
+        if (!window.state.dealerCars || !window.state.dealerCars[index]) return;
+        const car = window.state.dealerCars[index];
 
         if (car.status === 'ready') {
             window.state.balance += car.sellPrice;
-            this.logEvent(`Sold ${car.name} for $${this.formatEventMoney(car.sellPrice)}`, "text-emerald-400");
+            this.logEvent(`Sold ${car.name} for $${car.sellPrice.toFixed(2)}`, "text-emerald-400");
 
-            // Remove car from array
-            window.state.carDealership.splice(slotIndex, 1);
+            window.state.dealerCars.splice(index, 1);
 
             if (window.ui) {
                 window.ui.triggerBalancePulse('green');
@@ -597,63 +656,50 @@ const logic = {
                 }
             }
 
-            // Passive Income Pulse Array
-            let hasAnyStore = false;
-            BUSINESSES.forEach(b => {
-                if ((window.state.businesses?.[b.id] || 0) > 0) hasAnyStore = true;
-            });
-
-            if (hasAnyStore) {
-                const incomePerSecond = this.getPassiveIncome();
+            // Passive Income
+            const incomePerSecond = this.getPassiveIncome();
+            if (incomePerSecond > 0) {
                 this.addMoney(incomePerSecond * (deltaTime / 1000));
 
                 timeSinceLastIncome += deltaTime;
-                if (timeSinceLastIncome >= 1000) {
-                    timeSinceLastIncome -= 1000;
-                }
-                const progressPercent = (timeSinceLastIncome / 1000) * 100;
+                if (timeSinceLastIncome >= 1000) timeSinceLastIncome -= 1000;
 
-                // Update specific progress bars if they exist in UI
-                BUSINESSES.forEach(b => {
-                    const bar = document.getElementById(`storeProgressBar_${b.id}`);
-                    if (bar && (window.state.businesses?.[b.id] || 0) > 0) {
-                        bar.style.width = `${progressPercent}%`;
-                    } else if (bar) {
-                        bar.style.width = '0%';
-                    }
-                });
+                if (window.ui && window.ui.updateBusinessProgressBars) {
+                    const progressPercent = (timeSinceLastIncome / 1000) * 100;
+                    window.ui.updateBusinessProgressBars(progressPercent);
+                }
             } else {
-                BUSINESSES.forEach(b => {
-                    const bar = document.getElementById(`storeProgressBar_${b.id}`);
-                    if (bar) bar.style.width = `0%`;
-                });
+                if (window.ui && window.ui.updateBusinessProgressBars) {
+                    window.ui.updateBusinessProgressBars(0);
+                }
             }
 
             if (window.ui) window.ui.syncVisualsSilently();
 
             // Dealership Timer Logic
-            if (window.state.carDealership) {
-                if (window.state.carDealership.status === 'restoring') {
-                    const now = Date.now();
-                    if (now >= window.state.carDealership.restoreEndTime) {
-                        if (window.state.carDealership.hasHiddenFault) {
-                            window.state.carDealership.status = 'needs_repair';
-                            this.logEvent(`Hidden fault discovered in ${window.state.carDealership.name}!`, "text-red-400");
+            if (window.state.dealerCars && window.state.dealerCars.length > 0) {
+                window.state.dealerCars.forEach((car, index) => {
+                    if (car.status === 'restoring') {
+                        const now = Date.now();
+                        if (now >= car.restoreEndTime) {
+                            if (car.hasHiddenFault) {
+                                car.status = 'needs_repair';
+                                this.logEvent(`Hidden fault discovered in ${car.name}!`, "text-red-400");
+                            } else {
+                                car.status = 'ready';
+                            }
+                            if (window.ui) window.ui.renderGarage();
                         } else {
-                            window.state.carDealership.status = 'ready';
-                        }
-                        if (window.ui) window.ui.renderGarage();
-                    } else {
-                        const timeLeftMs = window.state.carDealership.restoreEndTime - now;
-                        const tTotal = window.state.carDealership.totalRestoreTimeMs || RESTORE_TIME_MS;
-                        const progressPercent = ((tTotal - timeLeftMs) / tTotal) * 100;
-
-                        if (window.state.activeTab === 'market' && window.ui && window.ui.elements.carRestoreTimer) {
-                            window.ui.elements.carRestoreTimer.innerText = (timeLeftMs / 1000).toFixed(1) + 's';
-                            window.ui.elements.carRestoreBar.style.width = `${progressPercent}%`;
+                            const timeLeftMs = car.restoreEndTime - now;
+                            const tTotal = car.totalRestoreTimeMs || RESTORE_TIME_MS;
+                            const progressPercent = ((tTotal - timeLeftMs) / tTotal) * 100;
+                            // Update individual progress bars via UI
+                            if (window.state.activeTab === 'market' && window.ui && window.ui.updateCarProgressBar) {
+                                window.ui.updateCarProgressBar(index, (timeLeftMs / 1000).toFixed(1), progressPercent);
+                            }
                         }
                     }
-                }
+                });
             }
 
             requestAnimationFrame(loop);
@@ -663,6 +709,7 @@ const logic = {
 };
 
 window.logic = logic;
+window.BUSINESS_DATA = BUSINESS_DATA;
 window.MARKET_DATA = MARKET_DATA;
 window.stockPrices = stockPrices;
 window.stockHistory = stockHistory;
