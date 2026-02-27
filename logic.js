@@ -64,9 +64,12 @@ const logic = {
     getBusinessCost(id) {
         const b = BUSINESS_DATA.find(x => x.id === id);
         let count = window.state.businesses?.[id] || 0;
-        if (id === 'retail' && window.state.retailStores > 0 && !window.state.businesses?.retail) {
+
+        // Handle legacy retail stores if they exist but haven't been migrated to the businesses object yet
+        if (id === 'retail' && count === 0 && window.state.retailStores > 0) {
             count = window.state.retailStores;
         }
+
         return b.baseCost * Math.pow(b.costMult, count);
     },
 
