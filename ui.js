@@ -32,7 +32,7 @@ const ui = {
             investView: document.getElementById('investView'),
 
             headerTitle: document.getElementById('headerTitle'),
-            licenseBadge: document.getElementById('licenseBadge'),
+            dealerBadge: document.getElementById('dealerBadge'),
             activityLogList: document.getElementById('activityLogList'),
 
             navCasino: document.getElementById('navCasino'),
@@ -198,6 +198,10 @@ const ui = {
     },
 
     formatMoney(amount) {
+        if (amount >= 1000000000000) return '$' + (amount / 1000000000000).toFixed(2) + 'T';
+        if (amount >= 1000000000) return '$' + (amount / 1000000000).toFixed(2) + 'B';
+        if (amount >= 1000000) return '$' + (amount / 1000000).toFixed(2) + 'M';
+        if (amount >= 10000) return '$' + (amount / 1000).toFixed(1) + 'k';
         return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
 
@@ -234,11 +238,9 @@ const ui = {
             }
         }
 
-        if (window.state.hasDealerLicense) {
-            el.licenseBadge?.classList.add('hidden');
-        } else {
-            el.licenseBadge?.classList.remove('hidden');
-        }
+        // The license gate logic handles its own visibility in switchTab('market') and renderMarket()
+        // Here we handle the notification dot specifically for the dealer state
+        this.updateDealerBadge();
 
         if (tabId === 'vault') {
             el.navVault?.classList.add('active', 'opacity-100');
@@ -301,6 +303,37 @@ const ui = {
             el.profileView?.classList.remove('hidden');
             if (el.headerTitle) el.headerTitle.innerText = "Player Profile";
             this.renderProfile();
+        }
+    },
+
+    updateDealerBadge() {
+        const el = this.elements;
+        if (!el.dealerBadge) return;
+
+        let needsAttention = false;
+
+        if (!window.state.hasDealerLicense) {
+            // Red badge if they haven't bought the license yet and have capital
+            if (window.state.balance >= 2500) {
+                el.dealerBadge.classList.remove('hidden');
+                el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-red-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,0.8)]";
+                return;
+            }
+        } else if (window.state.carDealership) {
+            if (window.state.carDealership.status === 'ready' || window.state.carDealership.status === 'needs_repair') {
+                needsAttention = true;
+                if (window.state.carDealership.status === 'ready') {
+                    el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-emerald-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(16,185,129,0.8)]";
+                } else {
+                    el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-red-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,0.8)] animate-pulse";
+                }
+            }
+        }
+
+        if (needsAttention) {
+            el.dealerBadge.classList.remove('hidden');
+        } else {
+            el.dealerBadge.classList.add('hidden');
         }
     },
 
@@ -446,10 +479,16 @@ const ui = {
                         </div>
                         <div class="flex gap-2">
                             <button onclick="window.logic.sellStock('${s.id}')" class="mt-1 px-4 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
-                                SELL
+                                S 1
+                            </button>
+                            <button onclick="window.logic.sellStock('${s.id}', 'max')" class="mt-1 px-4 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
+                                S All
                             </button>
                             <button onclick="window.logic.buyStock('${s.id}')" class="mt-1 px-4 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
-                                BUY
+                                B 1
+                            </button>
+                            <button onclick="window.logic.buyStock('${s.id}', 'max')" class="mt-1 px-4 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
+                                B Max
                             </button>
                         </div>
                     </div>
@@ -808,6 +847,8 @@ const ui = {
         if (el.btnBjDeal && (!window.state.blackjack || !window.state.blackjack.active)) {
             el.btnBjDeal.disabled = window.state.balance < bBet || bBet < 10;
         }
+
+        this.updateDealerBadge();
     },
 
     showSaveIndicator() {

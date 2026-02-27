@@ -80,15 +80,24 @@ const logic = {
         });
     },
 
-    buyStock(sym) {
+    buyStock(sym, amount = 1) {
         const price = stockPrices[sym];
-        if (window.state.balance >= price) {
-            window.state.balance -= price;
+        let buyAmount = amount;
+
+        if (amount === 'max') {
+            buyAmount = Math.floor(window.state.balance / price);
+            if (buyAmount <= 0) return;
+        }
+
+        const cost = price * buyAmount;
+
+        if (window.state.balance >= cost) {
+            window.state.balance -= cost;
             if (!window.state.portfolio[sym]) {
                 window.state.portfolio[sym] = { shares: 0, totalSpent: 0 };
             }
-            window.state.portfolio[sym].shares += 1;
-            window.state.portfolio[sym].totalSpent += price;
+            window.state.portfolio[sym].shares += buyAmount;
+            window.state.portfolio[sym].totalSpent += cost;
 
             if (window.ui && window.ui.triggerBalancePulse) window.ui.triggerBalancePulse('red');
             if (window.ui && window.ui.renderMarket) window.ui.renderMarket();
@@ -96,21 +105,30 @@ const logic = {
         }
     },
 
-    sellStock(sym) {
+    sellStock(sym, amount = 1) {
         if (!window.state.portfolio[sym] || window.state.portfolio[sym].shares <= 0) return;
 
         const price = stockPrices[sym];
         const port = window.state.portfolio[sym];
 
+        let sellAmount = amount;
+        if (amount === 'max') {
+            sellAmount = port.shares;
+        }
+
+        if (sellAmount > port.shares) sellAmount = port.shares;
+
+        const returns = price * sellAmount;
+
         // Add money to balance
-        window.state.balance += price;
+        window.state.balance += returns;
 
         // Calculate average price before selling to correctly adjust totalSpent
         const avgPrice = port.totalSpent / port.shares;
 
         // Decrement shares
-        port.shares -= 1;
-        port.totalSpent -= avgPrice; // Reduce totalSpent proportionally
+        port.shares -= sellAmount;
+        port.totalSpent -= (avgPrice * sellAmount); // Reduce totalSpent proportionally
 
         // Clean up empty portfolios
         if (port.shares <= 0) {
