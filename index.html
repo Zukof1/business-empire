@@ -122,49 +122,12 @@
 
             <!-- Businesses -->
             <section>
-                <div class="flex items-end justify-between px-1 mb-2">
-                    <h2 class="text-slate-500 text-xs font-bold uppercase tracking-widest">Portfolios</h2>
-                    <span id="storeCountDisplay"
-                        class="text-emerald-500 font-mono text-xs font-bold bg-emerald-500/10 px-2 py-0.5 rounded">0
-                        Active</span>
+                <div
+                    class="flex items-end justify-between px-1 mb-2 mt-4 text-xs font-bold uppercase tracking-widest text-slate-500">
+                    <h2>Portfolios</h2>
                 </div>
 
-                <button id="buyStoreBtn"
-                    class="w-full text-left bg-slate-850 border border-slate-800 p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden flex flex-col gap-4 disabled:opacity-40 disabled:cursor-not-allowed hover:border-slate-600 hover:bg-slate-800 shadow-lg">
-                    <div class="flex justify-between items-start relative z-10 w-full">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-slate-700/80 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                                🏪</div>
-                            <div class="flex flex-col">
-                                <h3 class="text-slate-200 font-bold text-base group-hover:text-white transition-colors">
-                                    Retail Syndicate</h3>
-                                <p class="text-emerald-400 text-xs font-semibold mt-0.5">+$2.00 /sec</p>
-                            </div>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <span id="storeCostDisplay"
-                                class="text-white font-bold text-lg tracking-tight">$100.00</span>
-                            <span
-                                class="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest group-hover:text-amber-400 transition-colors">Acquire</span>
-                        </div>
-                    </div>
-
-                    <div class="w-full relative z-10 pt-1">
-                        <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-slate-600 text-[9px] font-bold uppercase tracking-widest">Income
-                                Pulse</span>
-                            <span class="text-slate-600 text-[9px] font-bold uppercase tracking-widest font-mono">1.15x
-                                Rate</span>
-                        </div>
-                        <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800/50">
-                            <div id="storeProgressBar"
-                                class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 w-0 relative rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                                <div class="absolute inset-0 bg-white/20 w-1/8 animate-[pulse_1s_infinite]"></div>
-                            </div>
-                        </div>
-                    </div>
-                </button>
+                <div id="businessListContainer" class="flex flex-col gap-4"></div>
             </section>
         </main>
 
@@ -201,79 +164,7 @@
                             class="text-slate-500 font-mono text-xs font-bold bg-slate-800 px-2 py-0.5 rounded">Empty</span>
                     </div>
 
-                    <div id="garageSlot"
-                        class="bg-slate-850 border border-slate-800 p-5 rounded-2xl relative overflow-hidden flex flex-col gap-4 shadow-lg min-h-[120px]">
-                        <div id="garageEmptyState" class="flex flex-col items-center justify-center text-center py-6">
-                            <div class="text-4xl mb-2 opacity-50 text-slate-600">🏢</div>
-                            <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">No Active Projects</p>
-                            <p class="text-xs text-slate-600 mt-1">Acquire a vehicle from the auction</p>
-                        </div>
-
-                        <div id="garageActiveState" class="hidden flex-col">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 id="garageCarName" class="text-slate-200 font-bold text-lg">2018 Sedan</h3>
-                                    <p class="text-slate-400 text-xs mt-1">Acquired: <span id="garageBuyPrice"
-                                            class="text-amber-400 font-mono inline-block ml-1">$500.00</span></p>
-                                </div>
-                                <div class="text-xl pl-2" id="garageCarIcon">🚗</div>
-                            </div>
-
-                            <div id="garageRestoring" class="hidden w-full">
-                                <div class="flex justify-between items-center mb-1.5">
-                                    <span
-                                        class="text-orange-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                                        <div class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-                                        Restoring...
-                                    </span>
-                                    <span id="carRestoreTimer"
-                                        class="text-slate-400 text-[10px] font-bold font-mono">30.0s</span>
-                                </div>
-                                <div
-                                    class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800/50">
-                                    <div id="carRestoreBar"
-                                        class="h-full bg-gradient-to-r from-orange-600 to-amber-400 w-[0%] relative rounded-full">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="garageNeedsRepair"
-                                class="hidden w-full flex-col mt-2 pt-4 border-t border-red-900/50">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span
-                                        class="text-red-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                            </path>
-                                        </svg>
-                                        Hidden Engine Fault
-                                    </span>
-                                    <span class="text-slate-400 text-xs">Cost: <span
-                                            class="text-red-400 font-bold font-mono inline-block ml-1">-$300.00</span></span>
-                                </div>
-                                <p class="text-xs text-slate-400 mb-3">Mechanics found unexpected damage. Fixing it adds
-                                    15s.</p>
-                                <button id="payForRepairBtn"
-                                    class="w-full py-2.5 bg-red-900/40 hover:bg-red-800/60 border border-red-700 text-red-100 rounded-xl font-bold uppercase tracking-widest text-xs transition-all disabled:opacity-50">
-                                    Pay $300 for Repairs
-                                </button>
-                            </div>
-
-                            <div id="garageReady" class="hidden w-full flex-col mt-2 pt-4 border-t border-slate-800">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Ready
-                                        for Sale</span>
-                                    <span class="text-slate-400 text-xs">Return: <span id="garageSellPrice"
-                                            class="text-emerald-400 font-bold font-mono inline-block ml-1">$625.00</span></span>
-                                </div>
-                                <button id="sellCarBtn"
-                                    class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-xl font-bold uppercase tracking-widest text-sm shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all">
-                                    Sell Vehicle (+25%)
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="garageListContainer" class="flex flex-col gap-4"></div>
                 </section>
 
                 <section class="opacity-100 transition-opacity" id="auctionSection">

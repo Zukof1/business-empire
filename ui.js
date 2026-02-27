@@ -15,10 +15,7 @@ const ui = {
             workBtn: document.getElementById('workBtn'),
             clickValueDisplay: document.getElementById('clickValueDisplay'),
             efficiencyDisplay: document.getElementById('efficiencyDisplay'),
-            buyStoreBtn: document.getElementById('buyStoreBtn'),
-            storeCostDisplay: document.getElementById('storeCostDisplay'),
-            storeCountDisplay: document.getElementById('storeCountDisplay'),
-            storeProgressBar: document.getElementById('storeProgressBar'),
+            businessListContainer: document.getElementById('businessListContainer'),
 
             saveIndicator: document.getElementById('saveIndicator'),
             saveDot: document.getElementById('saveDot'),
@@ -124,7 +121,7 @@ const ui = {
         const l = window.logic;
 
         el.workBtn?.addEventListener('click', (e) => l.doWork(e));
-        el.buyStoreBtn?.addEventListener('click', () => l.buyStore());
+
 
         el.navVault?.addEventListener('click', () => this.switchTab('vault'));
         el.navMarket?.addEventListener('click', () => this.switchTab('market'));
@@ -159,8 +156,7 @@ const ui = {
         el.btnBjStand?.addEventListener('click', () => l.bjStand());
         el.browseAuctionsBtn?.addEventListener('click', () => l.browseAuctions());
         // Buy buttons are handled dynamically in renderAuction.
-        el.payForRepairBtn?.addEventListener('click', () => l.payForRepair());
-        el.sellCarBtn?.addEventListener('click', () => l.sellCar());
+        // Repair / Sell buttons are handled dynamically in renderGarage.
 
         el.saveIndicator?.addEventListener('click', () => window.hardReset());
 
@@ -249,6 +245,7 @@ const ui = {
             el.navVault?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-white');
             el.vaultView?.classList.remove('hidden');
             if (el.headerTitle) el.headerTitle.innerText = "Vault Balance";
+            this.renderBusinesses();
         } else if (tabId === 'market') {
             el.navMarket?.classList.add('active', 'opacity-100');
             el.navMarket?.classList.remove('opacity-40');
@@ -306,6 +303,63 @@ const ui = {
         }
     },
 
+    renderBusinesses() {
+        const el = this.elements;
+        if (!el.businessListContainer) return;
+
+        if (!window.state.businesses) {
+            window.state.businesses = {};
+            if (window.state.retailStores) {
+                window.state.businesses['b_retail'] = window.state.retailStores;
+                delete window.state.retailStores;
+            }
+        }
+
+        let html = '';
+        window.BUSINESSES.forEach(b => {
+            const count = window.state.businesses[b.id] || 0;
+            const cost = window.logic.getStoreCost(b.id);
+            const canAfford = window.state.balance >= cost;
+
+            html += `
+                <button onclick="window.logic.buyStore('${b.id}')"
+                    class="w-full text-left bg-slate-850 border border-slate-800 p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden flex flex-col gap-4 disabled:opacity-40 disabled:cursor-not-allowed hover:border-slate-600 hover:bg-slate-800 shadow-lg mb-4" ${!canAfford ? 'disabled' : ''}>
+                    <div class="flex justify-between items-start relative z-10 w-full">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-slate-700/80 shadow-inner group-hover:scale-110 transition-transform duration-300">
+                                ${b.icon}</div>
+                            <div class="flex flex-col">
+                                <h3 class="text-slate-200 font-bold text-base group-hover:text-white transition-colors">
+                                    ${b.name} <span class="text-xs bg-slate-700 font-mono text-emerald-400 px-1.5 py-0.5 rounded ml-1">${count}</span></h3>
+                                <p class="text-emerald-400 text-xs font-semibold mt-0.5">+$${this.formatMoney(b.income)} /sec</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="text-white font-bold text-lg tracking-tight">${this.formatMoney(cost)}</span>
+                            <span class="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest group-hover:text-amber-400 transition-colors">Expand</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full relative z-10 pt-1">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-slate-600 text-[9px] font-bold uppercase tracking-widest">Income Pulse</span>
+                            <span class="text-slate-600 text-[9px] font-bold uppercase tracking-widest font-mono">${b.mult}x Rate</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800/50">
+                            <div id="storeProgressBar_${b.id}"
+                                class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 w-0 relative rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                                <div class="absolute inset-0 bg-white/20 w-1/8 animate-[pulse_1s_infinite]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+             `;
+        });
+
+        el.businessListContainer.innerHTML = html;
+    },
+
     updateDealerBadge() {
         const el = this.elements;
         if (!el.dealerBadge) return;
@@ -319,12 +373,16 @@ const ui = {
                 el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-red-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,0.8)]";
                 return;
             }
-        } else if (window.state.carDealership) {
-            if (window.state.carDealership.status === 'ready' || window.state.carDealership.status === 'needs_repair') {
+        } else if (window.state.carDealership && Array.isArray(window.state.carDealership)) {
+            // Check if any car is ready or needs repair
+            const hasReady = window.state.carDealership.some(c => c.status === 'ready');
+            const hasRepair = window.state.carDealership.some(c => c.status === 'needs_repair');
+
+            if (hasReady || hasRepair) {
                 needsAttention = true;
-                if (window.state.carDealership.status === 'ready') {
+                if (!hasRepair && hasReady) {
                     el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-emerald-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(16,185,129,0.8)]";
-                } else {
+                } else if (hasRepair) {
                     el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-red-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,0.8)] animate-pulse";
                 }
             }
@@ -345,7 +403,7 @@ const ui = {
             let html = '';
             window.state.auctionCars.forEach((car, index) => {
                 const canAfford = window.state.balance >= car.price;
-                const isGarageFull = !!window.state.carDealership;
+                const isGarageFull = window.state.carDealership && Array.isArray(window.state.carDealership) && window.state.carDealership.length >= 3;
                 const disableBtn = !canAfford || isGarageFull;
 
                 html += `
@@ -376,7 +434,7 @@ const ui = {
             el.auctionResultsList.innerHTML = '';
         }
 
-        if (window.state.carDealership) {
+        if (window.state.carDealership && Array.isArray(window.state.carDealership) && window.state.carDealership.length >= 3) {
             el.auctionSection?.classList.add('opacity-50', 'pointer-events-none');
         } else {
             el.auctionSection?.classList.remove('opacity-50', 'pointer-events-none');
@@ -385,49 +443,109 @@ const ui = {
 
     renderGarage() {
         const el = this.elements;
-        if (!el.garageStatus) return;
+        if (!el.garageListContainer) return;
 
-        if (!window.state.carDealership) {
-            el.garageEmptyState?.classList.remove('hidden');
-            el.garageActiveState?.classList.add('hidden');
-            el.garageStatus.innerText = 'Empty';
-            el.garageStatus.classList.replace('text-emerald-400', 'text-slate-500');
-            el.garageStatus.classList.replace('text-red-400', 'text-slate-500');
-            el.garageStatus.classList.replace('text-orange-400', 'text-slate-500');
-        } else {
-            el.garageEmptyState?.classList.add('hidden');
-            el.garageActiveState?.classList.remove('hidden');
-
-            if (el.garageCarName) el.garageCarName.innerText = window.state.carDealership.name;
-            if (el.garageCarIcon) el.garageCarIcon.innerText = window.state.carDealership.icon;
-            if (el.garageBuyPrice) el.garageBuyPrice.innerText = this.formatMoney(window.state.carDealership.buyPrice);
-            if (el.garageSellPrice) el.garageSellPrice.innerText = this.formatMoney(window.state.carDealership.sellPrice);
-
-            el.garageRestoring?.classList.add('hidden');
-            el.garageReady?.classList.add('hidden');
-            el.garageNeedsRepair?.classList.add('hidden');
-
-            if (window.state.carDealership.status === 'restoring') {
-                el.garageStatus.innerText = 'Restoring';
-                el.garageStatus.classList.replace('text-emerald-400', 'text-orange-400');
-                el.garageStatus.classList.replace('text-red-400', 'text-orange-400');
-                el.garageStatus.classList.replace('text-slate-500', 'text-orange-400');
-                el.garageRestoring?.classList.remove('hidden');
-            }
-            else if (window.state.carDealership.status === 'needs_repair') {
-                el.garageStatus.innerText = 'Fault Found';
-                el.garageStatus.classList.replace('text-orange-400', 'text-red-400');
-                el.garageNeedsRepair?.classList.remove('hidden');
-                el.garageNeedsRepair?.classList.add('flex');
-            }
-            else if (window.state.carDealership.status === 'ready') {
-                el.garageStatus.innerText = 'Ready to Sell';
-                el.garageStatus.classList.replace('text-orange-400', 'text-emerald-400');
-                el.garageReady?.classList.remove('hidden');
-                el.garageReady?.classList.add('flex');
-            }
+        if (!window.state.carDealership) window.state.carDealership = [];
+        if (!Array.isArray(window.state.carDealership)) {
+            window.state.carDealership = [window.state.carDealership];
         }
-        if (window.state.activeTab === 'market') this.renderAuction();
+
+        // Update the header slots status
+        const garageStatus = document.getElementById('garageStatus');
+        if (garageStatus) {
+            garageStatus.innerText = `${window.state.carDealership.length}/3 Slots`;
+        }
+
+        let html = '';
+
+        // Render active cars
+        window.state.carDealership.forEach((car, index) => {
+            const repairing = car.status === 'restoring';
+            const needsRep = car.status === 'needs_repair';
+            const ready = car.status === 'ready';
+
+            const now = Date.now();
+            const timeRemaining = Math.max(0, car.restoreEndTime - now);
+            let percent = 0;
+            let timerText = '0.0s';
+            if (repairing && car.totalRestoreTimeMs > 0) {
+                const total = car.totalRestoreTimeMs;
+                const elapsed = total - timeRemaining;
+                percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
+                timerText = (timeRemaining / 1000).toFixed(1) + 's';
+            }
+
+            html += `
+              <div class="bg-slate-850 border border-slate-800 p-5 rounded-2xl relative overflow-hidden flex flex-col gap-4 shadow-lg min-h-[120px]">
+                  <div class="flex flex-col">
+                      <div class="flex justify-between items-start mb-4">
+                          <div>
+                              <h3 class="text-slate-200 font-bold text-lg">${car.name} <span class="text-xs text-slate-500 ml-2 border border-slate-700 rounded px-1">Slot ${index + 1}</span></h3>
+                              <p class="text-slate-400 text-xs mt-1">Acquired: <span class="text-amber-400 font-mono inline-block ml-1">${this.formatMoney(car.buyPrice)}</span></p>
+                          </div>
+                          <div class="text-xl pl-2">${car.icon}</div>
+                      </div>
+
+                      ${repairing ? `
+                      <div class="w-full">
+                          <div class="flex justify-between items-center mb-1.5">
+                              <span class="text-orange-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                                  <div class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
+                                  Restoring...
+                              </span>
+                              <span class="text-slate-400 text-[10px] font-bold font-mono" id="rtimer_${index}">${timerText}</span>
+                          </div>
+                          <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800/50">
+                              <div id="rbar_${index}" class="h-full bg-gradient-to-r from-orange-600 to-amber-400 relative rounded-full" style="width: ${percent}%;"></div>
+                          </div>
+                      </div>
+                      ` : ''}
+
+                      ${needsRep ? `
+                      <div class="w-full flex-col mt-2 pt-4 border-t border-red-900/50">
+                          <div class="flex justify-between items-center mb-2">
+                              <span class="text-red-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                  Hidden Engine Fault
+                              </span>
+                              <span class="text-slate-400 text-xs">Cost: <span class="text-red-400 font-bold font-mono inline-block ml-1">-$300.00</span></span>
+                          </div>
+                          <p class="text-xs text-slate-400 mb-3">Mechanics found unexpected damage. Fixing it adds 15s.</p>
+                          <button onclick="window.logic.payForRepair(${index})" class="w-full py-2.5 bg-red-900/40 hover:bg-red-800/60 border border-red-700 text-red-100 rounded-xl font-bold uppercase tracking-widest text-xs transition-all disabled:opacity-50" ${window.state.balance < 300 ? 'disabled' : ''}>
+                              Pay $300 for Repairs
+                          </button>
+                      </div>
+                      ` : ''}
+
+                      ${ready ? `
+                      <div class="w-full flex-col mt-2 pt-4 border-t border-slate-800">
+                          <div class="flex justify-between items-center mb-3">
+                              <span class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Ready for Sale</span>
+                              <span class="text-slate-400 text-xs">Return: <span class="text-emerald-400 font-bold font-mono inline-block ml-1">${this.formatMoney(car.sellPrice)}</span></span>
+                          </div>
+                          <button onclick="window.logic.sellCar(${index})" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-xl font-bold uppercase tracking-widest text-sm shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all">
+                              Sell Vehicle (+25%)
+                          </button>
+                      </div>
+                      ` : ''}
+                  </div>
+              </div>
+              `;
+        });
+
+        // Render empty slots up to 3
+        const emptySlots = 3 - window.state.carDealership.length;
+        for (let i = 0; i < emptySlots; i++) {
+            html += `
+              <div class="bg-slate-850/50 border border-slate-800 border-dashed p-5 rounded-2xl relative overflow-hidden flex flex-col items-center justify-center text-center shadow-inner min-h-[120px]">
+                  <div class="text-4xl mb-2 opacity-30 text-slate-600">🏢</div>
+                  <p class="text-sm font-bold text-slate-500 uppercase tracking-widest leading-none">Open Slot</p>
+                  <p class="text-xs text-slate-600 mt-2">Acquire a vehicle from auction</p>
+              </div>
+              `;
+        }
+
+        el.garageListContainer.innerHTML = html;
     },
 
     renderMarket() {
@@ -829,18 +947,15 @@ const ui = {
         if (el.balanceDisplay) el.balanceDisplay.innerText = this.formatMoney(window.state.balance);
         if (el.passiveIncomeDisplay) el.passiveIncomeDisplay.innerText = '+' + this.formatMoney(l.getPassiveIncome()) + ' /s';
 
-        const cost = l.getStoreCost();
-        if (el.storeCostDisplay) el.storeCostDisplay.innerText = this.formatMoney(cost);
-        if (el.storeCountDisplay) el.storeCountDisplay.innerText = `${window.state.retailStores} Active`;
+        if (window.state.activeTab === 'vault') this.renderBusinesses();
 
-        const cVal = l.getClickValue();
-        if (el.clickValueDisplay) el.clickValueDisplay.innerText = `+$${cVal}`;
-        if (el.efficiencyDisplay) el.efficiencyDisplay.innerText = `Efficiency: Lvl ${cVal}`;
-
-        if (el.buyStoreBtn) el.buyStoreBtn.disabled = window.state.balance < cost;
         if (el.buyLicenseBtn) el.buyLicenseBtn.disabled = window.state.balance < 2500;
-        if (el.payForRepairBtn && window.state.carDealership && window.state.carDealership.status === 'needs_repair') {
-            el.payForRepairBtn.disabled = window.state.balance < 300;
+
+        // Re-render buttons that depend on balance using logic hooks
+        if (window.state.activeTab === 'market' && window.state.carDealership) {
+            // The repair buttons inside renderGarage need bal check
+            const needsBalRepRender = window.state.carDealership.some(c => c.status === 'needs_repair');
+            if (needsBalRepRender) this.renderGarage();
         }
 
         if (el.buyCasinoBtn) el.buyCasinoBtn.disabled = window.state.balance < 10000;
