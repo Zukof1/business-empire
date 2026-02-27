@@ -64,7 +64,9 @@ const logic = {
     getBusinessCost(id) {
         const b = BUSINESS_DATA.find(x => x.id === id);
         let count = window.state.businesses?.[id] || 0;
-        if (id === 'retail' && count === 0) count = window.state.retailStores || 0;
+        if (id === 'retail' && window.state.retailStores > 0 && !window.state.businesses?.retail) {
+            count = window.state.retailStores;
+        }
         return b.baseCost * Math.pow(b.costMult, count);
     },
 
@@ -171,18 +173,6 @@ const logic = {
     },
 
     doWork(e) {
-        let totalBiz = 0;
-        if (window.state.businesses) {
-            Object.values(window.state.businesses).forEach(v => totalBiz += v);
-        } else {
-            totalBiz = window.state.retailStores || 0;
-        }
-
-        if (window.state.totalClicks >= 100 && totalBiz === 0) {
-            if (window.ui) window.ui.showToast('Acquire a Retail Syndicate to continue!');
-            return;
-        }
-
         const yieldVal = this.getClickValue();
         this.addMoney(yieldVal);
         window.state.totalClicks++;
@@ -257,7 +247,7 @@ const logic = {
             if (id === 'retail') window.state.retailStores = window.state.businesses.retail;
 
             const b = BUSINESS_DATA.find(x => x.id === id);
-            this.logEvent(`Acquired ${b.name} for $${this.formatMoney ? this.formatMoney(cost) : cost.toFixed(2)}`, "text-emerald-400");
+            this.logEvent(`Acquired ${b.name} for $${window.ui ? window.ui.formatMoney(cost) : cost.toFixed(2)}`, "text-amber-400");
 
             if (window.ui) {
                 window.ui.renderBusinesses();
