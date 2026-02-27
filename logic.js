@@ -31,7 +31,7 @@ const MARKET_DATA = [
 
 let stockPrices = {};
 let stockHistory = {};
-let stockMultiplier = '1'; // '1' or 'max'
+window.stockMultiplier = '1'; // '1' or 'max'
 MARKET_DATA.forEach(s => {
     stockPrices[s.id] = s.basePrice;
     stockHistory[s.id] = 0;
@@ -159,8 +159,8 @@ const logic = {
     },
 
     toggleStockMultiplier() {
-        if (stockMultiplier === '1') stockMultiplier = 'max';
-        else stockMultiplier = '1';
+        if (window.stockMultiplier === '1') window.stockMultiplier = 'max';
+        else window.stockMultiplier = '1';
         if (window.ui) window.ui.renderMarket();
     },
 
