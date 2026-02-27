@@ -441,10 +441,24 @@ const ui = {
         let html = '';
         if (!window.state.portfolio) window.state.portfolio = {};
 
+        // Add the toggle bar at the top
+        const isMax = window.stockMultiplier === 'max';
+        html += `
+        <div class="flex justify-between items-center bg-slate-850 p-2 px-3 rounded-xl border border-slate-700/80 shadow-sm mb-4">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trade Volume</span>
+            <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-800">
+                <button onclick="window.logic.toggleStockMultiplier()" class="px-3 py-1 text-xs font-bold rounded-md transition-colors ${!isMax ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">x1</button>
+                <button onclick="window.logic.toggleStockMultiplier()" class="px-3 py-1 text-xs font-bold rounded-md transition-colors ${isMax ? 'bg-amber-600/80 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">MAX</button>
+            </div>
+        </div>
+        `;
+
         window.MARKET_DATA.forEach(s => {
             const price = window.stockPrices[s.id];
             const hist = window.stockHistory[s.id];
             const port = window.state.portfolio[s.id] || { shares: 0, totalSpent: 0 };
+            const multArg = window.stockMultiplier === 'max' ? "'max'" : "1";
+            const btnLabel = window.stockMultiplier === 'max' ? "MAX" : "x1";
 
             let icon = '';
             let colorClass = 'text-slate-200';
@@ -459,9 +473,9 @@ const ui = {
                 const diffPerc = (diff / port.totalSpent) * 100;
                 const plClass = diff >= 0 ? 'text-emerald-500' : 'text-red-500';
                 const plSign = diff >= 0 ? '+' : '';
-                plHtml = `<div class="mt-2 text-[10px] sm:text-xs text-slate-400 border-t border-slate-700/50 pt-2">
-                    Avg: ${this.formatMoney(avg)} | 
-                    P/L: <span class="font-bold font-mono ${plClass}">${plSign}${this.formatMoney(diff)} (${plSign}${diffPerc.toFixed(1)}%)</span>
+                plHtml = `<div class="mt-2 text-[10px] sm:text-xs text-slate-400 border-t border-slate-700/50 pt-2 flex justify-between">
+                    <span>Avg: ${this.formatMoney(avg)}</span> 
+                    <span class="font-bold font-mono ${plClass}">P/L: ${plSign}${this.formatMoney(diff)} (${plSign}${diffPerc.toFixed(1)}%)</span>
                 </div>`;
             }
 
@@ -474,26 +488,16 @@ const ui = {
                         <span class="text-[10px] text-slate-500">Own: ${port.shares} shares</span>
                     </div>
                     <div class="flex flex-col items-end">
-                        <div class="font-mono text-sm sm:text-base font-bold ${colorClass} transition-colors">
+                        <div class="font-mono text-sm sm:text-base font-bold ${colorClass} transition-colors mb-2">
                             ${icon} ${this.formatMoney(price)}
                         </div>
-                        <div class="flex gap-2">
-                            <div class="flex flex-col gap-1 w-[80px]">
-                                <button onclick="window.logic.sellStock('${s.id}')" class="px-2 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
-                                    Sell 1
-                                </button>
-                                <button onclick="window.logic.sellStock('${s.id}', 'max')" class="px-2 py-1 bg-red-950 hover:bg-red-900 border border-red-900/50 rounded text-[9px] font-bold text-red-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
-                                    Sell All
-                                </button>
-                            </div>
-                            <div class="flex flex-col gap-1 w-[80px]">
-                                <button onclick="window.logic.buyStock('${s.id}')" class="px-2 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
-                                    Buy 1
-                                </button>
-                                <button onclick="window.logic.buyStock('${s.id}', 'max')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 rounded text-[9px] font-bold text-slate-400 transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
-                                    Buy Max
-                                </button>
-                            </div>
+                        <div class="flex gap-2 w-full justify-end">
+                            <button onclick="window.logic.sellStock('${s.id}', ${multArg})" class="flex-1 w-16 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
+                                SELL ${btnLabel}
+                            </button>
+                            <button onclick="window.logic.buyStock('${s.id}', ${multArg})" class="flex-1 w-16 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
+                                BUY ${btnLabel}
+                            </button>
                         </div>
                     </div>
                 </div>
