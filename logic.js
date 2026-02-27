@@ -393,14 +393,18 @@ const logic = {
     },
 
     browseAuctions() {
-        const price = Math.floor(Math.random() * (1200 - 500 + 1)) + 500;
-        const idx = Math.floor(Math.random() * CAR_NAMES.length);
+        window.state.auctionCars = [];
+        for (let i = 0; i < 3; i++) {
+            const price = Math.floor(Math.random() * (1200 - 500 + 1)) + 500;
+            const idx = Math.floor(Math.random() * CAR_NAMES.length);
 
-        window.state.auctionCar = {
-            name: CAR_NAMES[idx],
-            icon: CAR_ICONS[idx],
-            price: price
-        };
+            window.state.auctionCars.push({
+                id: Math.floor(Math.random() * 9000 + 1000),
+                name: CAR_NAMES[idx],
+                icon: CAR_ICONS[idx],
+                price: price
+            });
+        }
 
         if (window.ui) {
             window.ui.renderAuction();
@@ -408,25 +412,26 @@ const logic = {
         }
     },
 
-    buyAuction() {
-        if (window.state.auctionCar && window.state.balance >= window.state.auctionCar.price) {
-            window.state.balance -= window.state.auctionCar.price;
-            this.logEvent(`Bought ${window.state.auctionCar.name} for $${window.state.auctionCar.price.toFixed(2)}`, "text-amber-400");
+    buyAuction(index) {
+        const car = window.state.auctionCars && window.state.auctionCars[index];
+        if (car && window.state.balance >= car.price) {
+            window.state.balance -= car.price;
+            this.logEvent(`Bought ${car.name} for $${car.price.toFixed(2)}`, "text-amber-400");
 
             const willHaveFault = Math.random() < FAULT_CHANCE;
 
             window.state.carDealership = {
-                name: window.state.auctionCar.name,
-                icon: window.state.auctionCar.icon,
-                buyPrice: window.state.auctionCar.price,
-                sellPrice: window.state.auctionCar.price * 1.25,
+                name: car.name,
+                icon: car.icon,
+                buyPrice: car.price,
+                sellPrice: car.price * 1.25,
                 totalRestoreTimeMs: RESTORE_TIME_MS,
                 restoreEndTime: Date.now() + RESTORE_TIME_MS,
                 status: 'restoring',
                 hasHiddenFault: willHaveFault
             };
 
-            window.state.auctionCar = null;
+            window.state.auctionCars = null; // Clear auctions after buying one (occupies slot)
 
             if (window.ui) {
                 window.ui.renderGarage();

@@ -48,7 +48,7 @@
 
     <!-- Mobile App Container -->
     <div
-        class="relative w-full max-w-md bg-slate-900 min-h-[85vh] sm:min-h-[800px] shadow-2xl rounded-3xl overflow-hidden border border-slate-800 flex flex-col">
+        class="relative w-full max-w-md bg-slate-900 h-[95dvh] sm:h-[800px] shadow-2xl rounded-3xl overflow-hidden border border-slate-800 flex flex-col">
 
         <!-- Header / Vault Card -->
         <header class="p-6 pb-2 relative z-10 w-full">
@@ -277,7 +277,7 @@
 
                 <section class="opacity-100 transition-opacity" id="auctionSection">
                     <div class="flex items-center justify-between px-1 mb-2 pt-2">
-                        <h2 class="text-slate-500 text-xs font-bold uppercase tracking-widest">Broker Auctions</h2>
+                        <h2 class="text-slate-500 text-xs font-bold uppercase tracking-widest">Auto Auctions</h2>
                     </div>
 
                     <button id="browseAuctionsBtn"
@@ -288,28 +288,7 @@
                         </svg> Browse Auctions
                     </button>
 
-                    <div id="auctionResult"
-                        class="hidden bg-slate-850 p-4 rounded-xl border border-slate-700 shadow-md flex-col gap-4 translate-y-2 opacity-0 transition-all duration-300">
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-0.5">Lot
-                                    #<span id="auctionLot">3948</span></span>
-                                <h3 id="auctionCarName" class="text-white font-bold text-base">2012 Hatchback</h3>
-                            </div>
-                            <div class="text-2xl" id="auctionCarIcon">🚙</div>
-                        </div>
-
-                        <div class="flex items-center justify-between pt-3 border-t border-slate-800">
-                            <div class="flex flex-col">
-                                <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Asking
-                                    Price</span>
-                                <span id="auctionPrice"
-                                    class="text-slate-200 font-mono font-bold text-lg">$850.00</span>
-                            </div>
-                            <button id="buyAuctionBtn"
-                                class="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-900 font-bold px-5 py-2 rounded-lg text-sm shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all">Purchase</button>
-                        </div>
-                    </div>
+                    <div id="auctionResultsList" class="flex flex-col gap-4"></div>
                 </section>
             </div>
         </main>
@@ -672,7 +651,7 @@
                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                         </svg>
                         <span
-                            class="text-[9px] font-bold uppercase tracking-wider nav-text text-slate-400 transition-colors">Broker</span>
+                            class="text-[9px] font-bold uppercase tracking-wider nav-text text-slate-400 transition-colors">Dealer</span>
                         <div id="licenseBadge"
                             class="absolute top-[8px] right-[20%] w-2 h-2 bg-red-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,0.8)]">
                         </div>

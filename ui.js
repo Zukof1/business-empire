@@ -91,12 +91,7 @@ const ui = {
             buyLicenseBtn: document.getElementById('buyLicenseBtn'),
 
             browseAuctionsBtn: document.getElementById('browseAuctionsBtn'),
-            auctionResult: document.getElementById('auctionResult'),
-            auctionLot: document.getElementById('auctionLot'),
-            auctionCarName: document.getElementById('auctionCarName'),
-            auctionCarIcon: document.getElementById('auctionCarIcon'),
-            auctionPrice: document.getElementById('auctionPrice'),
-            buyAuctionBtn: document.getElementById('buyAuctionBtn'),
+            auctionResultsList: document.getElementById('auctionResultsList'),
             auctionSection: document.getElementById('auctionSection'),
 
             garageSlot: document.getElementById('garageSlot'),
@@ -163,7 +158,7 @@ const ui = {
         el.btnBjHit?.addEventListener('click', () => l.bjHit());
         el.btnBjStand?.addEventListener('click', () => l.bjStand());
         el.browseAuctionsBtn?.addEventListener('click', () => l.browseAuctions());
-        el.buyAuctionBtn?.addEventListener('click', () => l.buyAuction());
+        // Buy buttons are handled dynamically in renderAuction.
         el.payForRepairBtn?.addEventListener('click', () => l.payForRepair());
         el.sellCarBtn?.addEventListener('click', () => l.sellCar());
 
@@ -258,7 +253,7 @@ const ui = {
             el.navMarket?.querySelector('.nav-icon')?.classList.replace('text-slate-400', 'text-white');
             el.navMarket?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-white');
             el.marketView?.classList.remove('hidden');
-            if (el.headerTitle) el.headerTitle.innerText = "Available Capital";
+            if (el.headerTitle) el.headerTitle.innerText = "Auto Dealership";
 
             if (window.state.hasDealerLicense) {
                 el.licenseGate?.classList.add('hidden');
@@ -311,24 +306,41 @@ const ui = {
 
     renderAuction() {
         const el = this.elements;
-        if (!el.auctionResult) return;
+        if (!el.auctionResultsList) return;
 
-        if (window.state.auctionCar) {
-            if (el.auctionLot) el.auctionLot.innerText = Math.floor(Math.random() * 9000 + 1000);
-            if (el.auctionCarName) el.auctionCarName.innerText = window.state.auctionCar.name;
-            if (el.auctionCarIcon) el.auctionCarIcon.innerText = window.state.auctionCar.icon;
-            if (el.auctionPrice) el.auctionPrice.innerText = this.formatMoney(window.state.auctionCar.price);
+        if (window.state.auctionCars && window.state.auctionCars.length > 0) {
+            let html = '';
+            window.state.auctionCars.forEach((car, index) => {
+                const canAfford = window.state.balance >= car.price;
+                const isGarageFull = !!window.state.carDealership;
+                const disableBtn = !canAfford || isGarageFull;
 
-            el.auctionResult.classList.remove('hidden');
-            setTimeout(() => {
-                el.auctionResult.classList.remove('opacity-0', 'translate-y-2');
-                el.auctionResult.classList.add('opacity-100', 'translate-y-0');
-            }, 10);
+                html += `
+                    <div class="bg-slate-850 p-4 mb-2 rounded-xl border border-slate-700 shadow-md flex-col gap-4 transition-all duration-300">
+                        <div class="flex justify-between items-center">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-0.5">Lot
+                                    #<span>${car.id}</span></span>
+                                <h3 class="text-white font-bold text-base">${car.name}</h3>
+                            </div>
+                            <div class="text-2xl">${car.icon}</div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-800">
+                            <div class="flex flex-col">
+                                <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Asking
+                                    Price</span>
+                                <span class="text-slate-200 font-mono font-bold text-lg">${this.formatMoney(car.price)}</span>
+                            </div>
+                            <button onclick="window.logic.buyAuction(${index})"
+                                class="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-900 font-bold px-5 py-2 rounded-lg text-sm shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all" ${disableBtn ? 'disabled' : ''}>Purchase</button>
+                        </div>
+                    </div>
+                `;
+            });
+            el.auctionResultsList.innerHTML = html;
         } else {
-            el.auctionResult.classList.add('opacity-0', 'translate-y-2');
-            setTimeout(() => {
-                el.auctionResult.classList.add('hidden');
-            }, 300);
+            el.auctionResultsList.innerHTML = '';
         }
 
         if (window.state.carDealership) {
@@ -780,7 +792,6 @@ const ui = {
 
         if (el.buyStoreBtn) el.buyStoreBtn.disabled = window.state.balance < cost;
         if (el.buyLicenseBtn) el.buyLicenseBtn.disabled = window.state.balance < 2500;
-        if (el.buyAuctionBtn && window.state.auctionCar) el.buyAuctionBtn.disabled = window.state.balance < window.state.auctionCar.price;
         if (el.payForRepairBtn && window.state.carDealership && window.state.carDealership.status === 'needs_repair') {
             el.payForRepairBtn.disabled = window.state.balance < 300;
         }
