@@ -478,18 +478,22 @@ const ui = {
                             ${icon} ${this.formatMoney(price)}
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="window.logic.sellStock('${s.id}')" class="mt-1 px-4 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
-                                S 1
-                            </button>
-                            <button onclick="window.logic.sellStock('${s.id}', 'max')" class="mt-1 px-4 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
-                                S All
-                            </button>
-                            <button onclick="window.logic.buyStock('${s.id}')" class="mt-1 px-4 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
-                                B 1
-                            </button>
-                            <button onclick="window.logic.buyStock('${s.id}', 'max')" class="mt-1 px-4 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
-                                B Max
-                            </button>
+                            <div class="flex flex-col gap-1 w-[80px]">
+                                <button onclick="window.logic.sellStock('${s.id}')" class="px-2 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
+                                    Sell 1
+                                </button>
+                                <button onclick="window.logic.sellStock('${s.id}', 'max')" class="px-2 py-1 bg-red-950 hover:bg-red-900 border border-red-900/50 rounded text-[9px] font-bold text-red-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
+                                    Sell All
+                                </button>
+                            </div>
+                            <div class="flex flex-col gap-1 w-[80px]">
+                                <button onclick="window.logic.buyStock('${s.id}')" class="px-2 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
+                                    Buy 1
+                                </button>
+                                <button onclick="window.logic.buyStock('${s.id}', 'max')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 rounded text-[9px] font-bold text-slate-400 transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
+                                    Buy Max
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
