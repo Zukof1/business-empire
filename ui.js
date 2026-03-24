@@ -232,6 +232,7 @@ const ui = {
             el.navVault?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-white');
             el.vaultView?.classList.remove('hidden');
             if (el.headerTitle) el.headerTitle.innerText = "Vault Balance";
+            this.renderBusinesses();
         } else if (tabId === 'market') {
             el.navMarket?.classList.add('active', 'opacity-100');
             el.navMarket?.classList.remove('opacity-40');
@@ -434,7 +435,7 @@ const ui = {
                                 <span class="text-slate-400 text-xs">Cost: <span class="text-red-400 font-bold font-mono inline-block ml-1">-$300.00</span></span>
                             </div>
                             <p class="text-xs text-slate-400 mb-3">Mechanics found unexpected damage. Fixing it adds 15s.</p>
-                            <button onclick="window.logic.payForRepair(${i})" class="w-full py-2.5 bg-red-900/40 hover:bg-red-800/60 border border-red-700 text-red-100 rounded-xl font-bold uppercase tracking-widest text-xs transition-all disabled:opacity-50" ${window.state.balance < 300 ? 'disabled' : ''}>
+                            <button id="repairBtn-${i}" onclick="window.logic.payForRepair(${i})" class="w-full py-2.5 bg-red-900/40 hover:bg-red-800/60 border border-red-700 text-red-100 rounded-xl font-bold uppercase tracking-widest text-xs transition-all disabled:opacity-50" ${window.state.balance < 300 ? 'disabled' : ''}>
                                 Pay $300 for Repairs
                             </button>
                         </div>
@@ -856,53 +857,82 @@ const ui = {
         if (!el.businessesList) return;
 
         let html = '';
-        let totalActive = 0;
+        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+        let totalActive = businesses.length || window.state.retailStores || 0;
 
         window.BUSINESS_DATA.forEach(b => {
-            let count = window.state.businesses?.[b.id] || 0;
+            const ownedInstances = businesses.filter(biz => biz.id === b.id).map((biz, idx) => ({ biz, idx: businesses.indexOf(biz) }));
+            let count = ownedInstances.length;
             if (b.id === 'retail' && count === 0 && window.state.retailStores > 0) count = window.state.retailStores || 0;
-            totalActive += count;
 
-            const cost = window.logic.getBusinessCost(b.id);
-            const canAfford = window.state.balance >= cost;
-            const opacityClass = !canAfford ? 'opacity-50' : '';
+            // Render Owned Instances
+            ownedInstances.forEach(({biz, idx}) => {
+                const upgradeCost = window.logic.getBusinessUpgradeCost(biz);
+                const canUpgrade = window.state.balance >= upgradeCost;
 
-            html += `
-                <button onclick="window.logic.buyBusiness('${b.id}')"
-                    class="w-full text-left bg-slate-850 border border-slate-800 p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden flex flex-col gap-4 disabled:cursor-not-allowed hover:border-slate-600 hover:bg-slate-800 shadow-lg ${opacityClass}" ${canAfford ? '' : 'disabled'}>
+                html += `
+                <div id="bizOwned-${idx}" class="w-full text-left bg-slate-850 border border-slate-700 p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden flex flex-col gap-4 shadow-[0_4px_20px_-5px_rgba(245,158,11,0.15)] border-l-4 border-l-amber-500">
                     <div class="flex justify-between items-start relative z-10 w-full">
                         <div class="flex items-center gap-3">
-                            <div
-                                class="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-slate-700/80 shadow-inner group-hover:scale-110 transition-transform duration-300">
-                                ${b.icon}</div>
+                            <div class="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-slate-700/80 shadow-inner">
+                                ${b.icon}
+                            </div>
                             <div class="flex flex-col">
-                                <h3 class="text-slate-200 font-bold text-base group-hover:text-white transition-colors">
-                                    ${b.name} <span class="text-xs text-slate-500 font-mono ml-1">x${count}</span></h3>
-                                <p class="text-emerald-400 text-xs font-semibold mt-0.5">+$${b.income.toLocaleString()} /sec</p>
+                                <h3 class="text-white font-bold text-base">
+                                    ${b.name} <span class="text-amber-400 text-[10px] uppercase font-bold tracking-widest ml-2 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">⭐ Lvl ${biz.level || 1}</span>
+                                </h3>
+                                <p class="text-emerald-400 text-xs font-semibold mt-1" id="bizRateIdx-${idx}">+$${(biz.incomePerHour / 3600).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})} /sec</p>
                             </div>
                         </div>
-                        <div class="flex flex-col items-end">
-                            <span class="text-white font-bold text-lg tracking-tight">${this.formatMoney(cost)}</span>
-                            <span
-                                class="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest group-hover:text-amber-400 transition-colors">Acquire</span>
-                        </div>
+                        <button onclick="window.logic.upgradeBusiness(${idx}); event.stopPropagation();" id="bizUpgradeBtn-${idx}" class="flex flex-col items-end transition-opacity duration-300 ${!canUpgrade ? 'opacity-40 cursor-not-allowed' : 'hover:scale-105 active:scale-95 cursor-pointer'}">
+                            <span class="text-amber-400 font-bold text-lg tracking-tight">${this.formatMoney(upgradeCost)}</span>
+                            <span class="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest ${canUpgrade ? 'text-amber-500' : ''}">Upgrade</span>
+                        </button>
                     </div>
 
-                    <div class="w-full relative z-10 pt-1">
-                        <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-slate-600 text-[9px] font-bold uppercase tracking-widest">Income
-                                Pulse</span>
-                            <span class="text-slate-600 text-[9px] font-bold uppercase tracking-widest font-mono">${b.costMult}x
-                                Rate</span>
+                    <div class="w-full relative z-10 pt-3 mt-2 border-t border-slate-700/50 flex justify-between items-center">
+                        <div class="flex flex-col">
+                            <span class="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Vault Ready</span>
+                            <span id="bizAccumulatedIdx-${idx}" class="text-emerald-400 font-mono font-bold text-sm">${this.formatMoney(biz.accumulated || 0)}</span>
                         </div>
-                        <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800/50">
-                            <div class="store-progress-bar h-full bg-gradient-to-r from-emerald-600 to-emerald-400 w-0 relative rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]">
-                                <div class="absolute inset-0 bg-white/20 w-1/8 animate-[pulse_1s_infinite]"></div>
+                        <button onclick="event.stopPropagation(); window.logic.collectIncomeByIndex(${idx})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors z-20 relative disabled:opacity-50 disabled:cursor-not-allowed" ${(biz.accumulated || 0) <= 0 ? 'disabled' : ''} id="bizCollectBtnIdx-${idx}">
+                            Collect
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+
+            // Render Blueprint if limits allow
+            const isMaxed = b.maxOwn && count >= b.maxOwn;
+            if (!isMaxed) {
+                const cost = window.logic.getBusinessCost(b.id);
+                const canAfford = window.state.balance >= cost;
+                html += `
+                <div id="bizBtn-${b.id}" onclick="window.logic.buyBusiness('${b.id}')"
+                    class="w-full text-left bg-slate-900 border border-slate-800 border-dashed p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden flex flex-col gap-4 hover:border-slate-600 hover:bg-slate-800 shadow-lg cursor-pointer opacity-80 hover:opacity-100">
+                    <div class="flex justify-between items-start relative z-10 w-full">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-slate-700/80 shadow-inner opacity-70 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                                ${b.icon}
+                            </div>
+                            <div class="flex flex-col">
+                                <h3 class="text-slate-400 font-bold text-base group-hover:text-white transition-colors">
+                                    ${b.name} <span class="text-xs text-slate-500 font-mono ml-1 uppercase bg-slate-800 px-1 py-0.5 rounded">Blueprint</span>
+                                </h3>
+                                <p class="text-slate-500 text-xs font-semibold mt-0.5" id="bizRate-${b.id}">Base: +$${b.income.toLocaleString()} /sec</p>
                             </div>
                         </div>
+                        <div id="bizCostArea-${b.id}" class="flex flex-col items-end transition-opacity duration-300 ${!canAfford ? 'opacity-40' : ''}">
+                            <span class="text-white font-bold text-lg tracking-tight">${this.formatMoney(cost)}</span>
+                            <span id="bizAcquireText-${b.id}" class="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest transition-colors ${canAfford ? 'group-hover:text-amber-400' : ''}">
+                                Acquire (${count} / ${b.maxOwn || '∞'})
+                            </span>
+                        </div>
                     </div>
-                </button>
-             `;
+                </div>
+                `;
+            }
         });
 
         el.businessesList.innerHTML = html;
@@ -910,9 +940,19 @@ const ui = {
     },
 
     updateBusinessProgressBars(percent) {
-        const bars = document.querySelectorAll('.store-progress-bar');
-        bars.forEach(bar => {
-            bar.style.width = `${percent}%`;
+        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+        window.BUSINESS_DATA.forEach(b => {
+            const bar = document.getElementById(`bizProgress-${b.id}`);
+            if (bar) {
+                let count = businesses.filter(biz => biz.id === b.id).length;
+                if (b.id === 'retail' && count === 0 && window.state.retailStores > 0) count = window.state.retailStores || 0;
+                
+                if (count > 0) {
+                    bar.style.width = `${percent}%`;
+                } else {
+                    bar.style.width = `0%`;
+                }
+            }
         });
     },
 
@@ -956,9 +996,68 @@ const ui = {
         if (el.balanceDisplay) el.balanceDisplay.innerText = this.formatMoney(window.state.balance);
         if (el.passiveIncomeDisplay) el.passiveIncomeDisplay.innerText = '+' + this.formatMoney(l.getPassiveIncome()) + ' /s';
 
-        // Re-render complex states
-        if (window.state.activeTab === 'vault') this.renderBusinesses();
-        if (window.state.activeTab === 'market') this.renderGarage();
+        // Re-render complex states only when needed, not on every frame
+        // Dynamically toggle business buttons based on balance
+        if (window.state.activeTab === 'vault') {
+            const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+            
+            // Sync Owned Instances
+            businesses.forEach((biz, idx) => {
+                const upgradeBtn = document.getElementById(`bizUpgradeBtn-${idx}`);
+                if (upgradeBtn) {
+                    const cost = l.getBusinessUpgradeCost(biz);
+                    const canAfford = window.state.balance >= cost;
+                    if (canAfford) {
+                        upgradeBtn.className = "flex flex-col items-end transition-opacity duration-300 hover:scale-105 active:scale-95 cursor-pointer";
+                        upgradeBtn.children[1].classList.add('text-amber-500');
+                    } else {
+                        upgradeBtn.className = "flex flex-col items-end transition-opacity duration-300 opacity-40 cursor-not-allowed";
+                        upgradeBtn.children[1].classList.remove('text-amber-500');
+                    }
+                }
+
+                const accumDisplay = document.getElementById(`bizAccumulatedIdx-${idx}`);
+                const collectBtn = document.getElementById(`bizCollectBtnIdx-${idx}`);
+                if (accumDisplay && collectBtn) {
+                    accumDisplay.innerText = this.formatMoney(biz.accumulated || 0);
+                    collectBtn.disabled = (biz.accumulated || 0) <= 0;
+                }
+            });
+
+            // Sync Blueprints
+            window.BUSINESS_DATA.forEach(b => {
+                const costArea = document.getElementById(`bizCostArea-${b.id}`);
+                const acquireText = document.getElementById(`bizAcquireText-${b.id}`);
+                if (costArea && acquireText) {
+                    const cost = l.getBusinessCost(b.id);
+                    const canAfford = window.state.balance >= cost;
+                    
+                    if (canAfford) {
+                        costArea.classList.remove('opacity-40');
+                        acquireText.classList.add('group-hover:text-amber-400');
+                    } else {
+                        costArea.classList.add('opacity-40');
+                        acquireText.classList.remove('group-hover:text-amber-400');
+                    }
+                }
+            });
+        }
+
+        // Dynamically toggle garage interaction buttons if any dependencies rely on rapid balance changes
+        if (window.state.activeTab === 'market') {
+            if (el.buyGarageBtn) {
+                const expansionCost = l.getGarageExpansionCost();
+                el.buyGarageBtn.disabled = window.state.balance < expansionCost;
+            }
+            if (window.state.dealerCars) {
+                window.state.dealerCars.forEach((car, i) => {
+                    const repairBtn = document.getElementById(`repairBtn-${i}`);
+                    if (repairBtn) {
+                        repairBtn.disabled = window.state.balance < 300;
+                    }
+                });
+            }
+        }
 
         const cVal = l.getClickValue();
         if (el.clickValueDisplay) el.clickValueDisplay.innerText = `+$${cVal}`;

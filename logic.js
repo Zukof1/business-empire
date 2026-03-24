@@ -1,8 +1,8 @@
 const BUSINESS_DATA = [
-    { id: 'retail', name: 'Retail Syndicate', icon: '🏪', baseCost: 100, costMult: 1.15, income: 2 },
-    { id: 'startup', name: 'Tech Startup', icon: '💻', baseCost: 2500, costMult: 1.15, income: 60 },
-    { id: 'estate', name: 'Real Estate Firm', icon: '🏢', baseCost: 50000, costMult: 1.15, income: 1500 },
-    { id: 'corp', name: 'Mega Corporation', icon: '🌐', baseCost: 1000000, costMult: 1.15, income: 40000 }
+    { id: 'retail', name: 'Retail Syndicate', icon: '🏪', baseCost: 100, costMult: 1.15, income: 2, maxOwn: 3 },
+    { id: 'startup', name: 'Tech Startup', icon: '💻', baseCost: 2500, costMult: 1.15, income: 60, maxOwn: 2 },
+    { id: 'estate', name: 'Real Estate Firm', icon: '🏢', baseCost: 50000, costMult: 1.15, income: 1500, maxOwn: 2 },
+    { id: 'corp', name: 'Mega Corporation', icon: '🌐', baseCost: 1000000, costMult: 1.15, income: 40000, maxOwn: 1 }
 ];
 
 const RESTORE_TIME_MS = 30000;
@@ -48,14 +48,9 @@ const logic = {
     },
 
     getClickValue() {
-        const retailCount = window.state.businesses?.retail || window.state.retailStores || 0;
-
-        let totalBiz = 0;
-        if (window.state.businesses) {
-            Object.values(window.state.businesses).forEach(v => totalBiz += v);
-        } else {
-            totalBiz = window.state.retailStores || 0;
-        }
+        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+        const retailCount = businesses.filter(b => b.id === 'retail').length || window.state.retailStores || 0;
+        const totalBiz = businesses.length || window.state.retailStores || 0;
 
         const base = Math.floor(retailCount / 10) + Math.floor(totalBiz / 5) + 1;
         return base * this.getPrestigeMultiplier();
@@ -63,7 +58,8 @@ const logic = {
 
     getBusinessCost(id) {
         const b = BUSINESS_DATA.find(x => x.id === id);
-        let count = window.state.businesses?.[id] || 0;
+        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+        let count = businesses.filter(biz => biz.id === id).length;
 
         // Handle legacy retail stores if they exist but haven't been migrated to the businesses object yet
         if (id === 'retail' && count === 0 && window.state.retailStores > 0) {
@@ -73,17 +69,136 @@ const logic = {
         return b.baseCost * Math.pow(b.costMult, count);
     },
 
+    getBusinessUpgradeCost(businessObj) {
+        const bData = BUSINESS_DATA.find(x => x.id === businessObj.id);
+        const baseUpgrade = bData.baseCost * 0.5; 
+        return baseUpgrade * Math.pow(1.8, (businessObj.level || 1) - 1);
+    },
+
+    getBusinessIncome(businessObj) {
+        const bData = BUSINESS_DATA.find(x => x.id === businessObj.id);
+        return (bData.income * 3600) * Math.pow(1.6, (businessObj.level || 1) - 1);
+    },
+
+    upgradeBusiness(index) {
+        if (!Array.isArray(window.state.businesses)) return;
+        const b = window.state.businesses[index];
+        if (!b) return;
+
+        const cost = this.getBusinessUpgradeCost(b);
+        if (window.state.balance >= cost) {
+            window.state.balance -= cost;
+            b.level = (b.level || 1) + 1;
+            b.incomePerHour = this.getBusinessIncome(b);
+            
+            const bData = BUSINESS_DATA.find(x => x.id === b.id);
+            this.logEvent(`Upgraded ${bData.name} to Level ${b.level}`, "text-amber-400");
+            
+            if (window.ui) {
+                window.ui.renderBusinesses();
+                window.ui.updateUI();
+            }
+        } else {
+            if (window.ui) window.ui.showToast(`Not enough funds. Need $${window.ui.formatMoney(cost - window.state.balance)} more.`);
+        }
+    },
+
+    collectIncomeByIndex(index) {
+        if (!Array.isArray(window.state.businesses)) return;
+        const b = window.state.businesses[index];
+        if (b && (b.accumulated || 0) > 0) {
+            const amount = b.accumulated;
+            b.accumulated = 0;
+            this.addMoney(amount);
+            
+            const bData = BUSINESS_DATA.find(x => x.id === b.id);
+            this.logEvent(`Collected $${window.ui ? window.ui.formatMoney(amount) : amount.toFixed(2)} from ${bData.name} Lvl ${b.level || 1}`, "text-emerald-400");
+            
+            if (window.ui) {
+                window.ui.triggerBalancePulse('green');
+                window.ui.updateUI();
+            }
+        }
+    },
+
     getPassiveIncome() {
         let income = 0;
-        BUSINESS_DATA.forEach(b => {
-            const count = window.state.businesses?.[b.id] || 0;
-            if (b.id === 'retail' && count === 0 && window.state.retailStores > 0) {
-                income += window.state.retailStores * b.income;
-            } else {
-                income += count * b.income;
+        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+        
+        businesses.forEach(b => {
+            if (b.incomePerHour) {
+                income += (b.incomePerHour / 3600);
             }
         });
+
+        if (businesses.length === 0 && window.state.retailStores > 0) {
+            const retailData = BUSINESS_DATA.find(x => x.id === 'retail');
+            income += window.state.retailStores * retailData.income;
+        }
+
         return income * this.getPrestigeMultiplier();
+    },
+
+    processBusinessIncome() {
+        const now = Date.now();
+        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+        const prestigeMulti = this.getPrestigeMultiplier();
+        
+        businesses.forEach(b => {
+            if (b.incomePerHour && b.lastPayout) {
+                const elapsedSeconds = (now - b.lastPayout) / 1000;
+                if (elapsedSeconds > 0) {
+                    const baseEarned = (b.incomePerHour / 3600) * elapsedSeconds;
+                    const earned = baseEarned * prestigeMulti;
+                    b.accumulated = (b.accumulated || 0) + earned;
+                    b.lastPayout = now;
+                }
+            } else if (!b.lastPayout) {
+                b.lastPayout = now;
+            }
+        });
+    },
+
+    collectIncome(id) {
+        if (!Array.isArray(window.state.businesses)) return;
+        let totalCollected = 0;
+        window.state.businesses.forEach(b => {
+            if (b.id === id && b.accumulated > 0) {
+                totalCollected += b.accumulated;
+                b.accumulated = 0;
+            }
+        });
+
+        if (totalCollected > 0) {
+            this.addMoney(totalCollected);
+            const bData = BUSINESS_DATA.find(x => x.id === id);
+            const name = bData ? bData.name : 'Business';
+            this.logEvent(`Collected $${window.ui ? window.ui.formatMoney(totalCollected) : totalCollected.toFixed(2)} from ${name}`, "text-emerald-400");
+            if (window.ui) {
+                window.ui.triggerBalancePulse('green');
+                window.ui.updateUI();
+            }
+        }
+    },
+
+    collectAllIncome() {
+        if (!Array.isArray(window.state.businesses)) return;
+        let totalCollected = 0;
+        window.state.businesses.forEach(b => {
+            if (b.accumulated > 0) {
+                totalCollected += b.accumulated;
+                b.accumulated = 0;
+            }
+        });
+
+        if (totalCollected > 0) {
+            this.addMoney(totalCollected);
+            this.logEvent(`Collected $${window.ui ? window.ui.formatMoney(totalCollected) : totalCollected.toFixed(2)} from All Portfolios`, "text-emerald-400");
+            if (window.ui) {
+                window.ui.triggerBalancePulse('green');
+                window.ui.updateUI();
+            }
+        }
     },
 
     getPortfolioValue() {
@@ -213,7 +328,7 @@ const logic = {
             if (confirm("Are you incredibly sure? You will lose all money, businesses, stocks, and cars for a permanent +10% income multiplier.")) {
                 window.state.prestigeCount = (window.state.prestigeCount || 0) + 1;
                 window.state.balance = 0;
-                window.state.businesses = {};
+                window.state.businesses = [];
                 window.state.retailStores = 0;
                 window.state.portfolio = {};
                 window.state.dealerCars = [];
@@ -235,22 +350,32 @@ const logic = {
 
     buyBusiness(id) {
         try {
-            if (!window.state.businesses) window.state.businesses = {};
+            if (!Array.isArray(window.state.businesses)) window.state.businesses = [];
 
-            // Migration for retail
-            if (id === 'retail' && !window.state.businesses.retail && window.state.retailStores > 0) {
-                window.state.businesses.retail = window.state.retailStores || 0;
+            const b = BUSINESS_DATA.find(x => x.id === id);
+            let count = window.state.businesses.filter(biz => biz.id === id).length;
+            
+            if (b.maxOwn && count >= b.maxOwn) {
+                if (window.ui) window.ui.showToast(`Maximum ${b.name} limit reached.`);
+                return;
             }
 
             const cost = this.getBusinessCost(id);
             if (window.state.balance >= cost) {
                 window.state.balance -= cost;
-                window.state.businesses[id] = (window.state.businesses[id] || 0) + 1;
+                
+                const b = BUSINESS_DATA.find(x => x.id === id);
+                
+                window.state.businesses.push({
+                    id: id,
+                    level: 1,
+                    incomePerHour: b.income * 3600,
+                    lastPayout: Date.now()
+                });
 
                 // Sync legacy
-                if (id === 'retail') window.state.retailStores = window.state.businesses.retail;
+                if (id === 'retail') window.state.retailStores = window.state.businesses.filter(biz => biz.id === 'retail').length;
 
-                const b = BUSINESS_DATA.find(x => x.id === id);
                 this.logEvent(`Acquired ${b.name} for $${window.ui ? window.ui.formatMoney(cost) : cost.toFixed(2)}`, "text-amber-400");
 
                 if (window.ui) {
@@ -669,11 +794,12 @@ const logic = {
                 }
             }
 
-            // Passive Income
+            // Accrue Passive Income internally
+            this.processBusinessIncome();
+
+            // Sync visual progress bars for businesses that produce income
             const incomePerSecond = this.getPassiveIncome();
             if (incomePerSecond > 0) {
-                this.addMoney(incomePerSecond * (deltaTime / 1000));
-
                 timeSinceLastIncome += deltaTime;
                 if (timeSinceLastIncome >= 1000) timeSinceLastIncome -= 1000;
 

@@ -1,0 +1,25 @@
+{
+  "name": "business-empire",
+  "version": "1.0.0",
+  "description": "",
+  "main": "logic.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://Zukof1: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@github.com/Zukof1/business-empire.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Zukof1/business-empire/issues"
+  },
+  "homepage": "https://github.com/Zukof1/business-empire#readme",
+  "dependencies": {
+    "playwright": "^1.58.2",
+    "puppeteer": "^24.40.0"
+  }
+}

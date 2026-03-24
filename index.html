@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Business Empire: Banking</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -48,8 +49,11 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- Mobile App Container -->
-    <div
+    <div id="app"
         class="relative w-full max-w-md bg-slate-900 h-[95dvh] sm:h-[800px] shadow-2xl rounded-3xl overflow-hidden border border-slate-800 flex flex-col">
+
+        <!-- Abstract Three.js Background -->
+        <canvas id="threeCanvas" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
 
         <!-- Header / Vault Card -->
         <header class="p-6 pb-2 relative z-10 w-full">
@@ -124,9 +128,12 @@
             <section>
                 <div class="flex items-end justify-between px-1 mb-2">
                     <h2 class="text-slate-500 text-xs font-bold uppercase tracking-widest">Portfolios</h2>
-                    <span id="storeCountDisplay"
-                        class="text-emerald-500 font-mono text-xs font-bold bg-emerald-500/10 px-2 py-0.5 rounded">0
-                        Active</span>
+                    <div class="flex items-center gap-2">
+                        <span id="storeCountDisplay"
+                            class="text-emerald-500 font-mono text-xs font-bold bg-emerald-500/10 px-2 py-0.5 rounded">0
+                            Active</span>
+                        <button onclick="window.logic.collectAllIncome()" class="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm transition-all transform hover:scale-105 active:scale-95">Collect All</button>
+                    </div>
                 </div>
 
                 <div id="businessesList" class="flex flex-col gap-3"></div>
@@ -600,9 +607,10 @@
     </div>
 
     <!-- Script Imports -->
-    <script src="state.js?v=1"></script>
-    <script src="logic.js?v=1"></script>
-    <script src="ui.js?v=1"></script>
+    <script src="state.js?v=7"></script>
+    <script src="logic.js?v=7"></script>
+    <script src="ui.js?v=7"></script>
+    <script src="threeRender.js?v=7"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             window.loadGame();
