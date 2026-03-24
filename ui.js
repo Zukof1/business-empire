@@ -895,7 +895,7 @@ const ui = {
                             <span class="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Vault Ready</span>
                             <span id="bizAccumulatedIdx-${idx}" class="text-emerald-400 font-mono font-bold text-sm">${this.formatMoney(biz.accumulated || 0)}</span>
                         </div>
-                        <button onclick="event.stopPropagation(); window.logic.collectIncomeByIndex(${idx})" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors z-20 relative disabled:opacity-50 disabled:cursor-not-allowed" ${(biz.accumulated || 0) <= 0 ? 'disabled' : ''} id="bizCollectBtnIdx-${idx}">
+                        <button onclick="event.stopPropagation(); window.logic.collectIncomeByIndex(${idx}); window.threeEffects && window.threeEffects.triggerClickPulse(event.clientX, event.clientY);" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors z-20 relative disabled:opacity-50 disabled:cursor-not-allowed" ${(biz.accumulated || 0) <= 0 ? 'disabled' : ''} id="bizCollectBtnIdx-${idx}">
                             Collect
                         </button>
                     </div>

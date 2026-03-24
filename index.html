@@ -132,7 +132,7 @@
                         <span id="storeCountDisplay"
                             class="text-emerald-500 font-mono text-xs font-bold bg-emerald-500/10 px-2 py-0.5 rounded">0
                             Active</span>
-                        <button onclick="window.logic.collectAllIncome()" class="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm transition-all transform hover:scale-105 active:scale-95">Collect All</button>
+                        <button onclick="window.logic.collectAllIncome(); window.threeEffects && window.threeEffects.triggerClickPulse(event.clientX, event.clientY);" class="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest shadow-sm transition-all transform hover:scale-105 active:scale-95">Collect All</button>
                     </div>
                 </div>
 
@@ -607,10 +607,10 @@
     </div>
 
     <!-- Script Imports -->
-    <script src="state.js?v=7"></script>
-    <script src="logic.js?v=7"></script>
-    <script src="ui.js?v=7"></script>
-    <script src="threeRender.js?v=7"></script>
+    <script src="state.js?v=8"></script>
+    <script src="logic.js?v=8"></script>
+    <script src="ui.js?v=8"></script>
+    <script src="threeRender.js?v=8"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             window.loadGame();

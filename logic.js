@@ -299,6 +299,9 @@ const logic = {
             window.ui.triggerBalancePulse('green');
             window.ui.updateUI();
             window.ui.createParticle(e, `+$${yieldVal.toFixed(2)}`);
+            if (window.threeEffects && window.threeEffects.triggerClickPulse) {
+                window.threeEffects.triggerClickPulse(e.clientX, e.clientY);
+            }
         }
     },
 
@@ -306,6 +309,10 @@ const logic = {
         window.state.balance += amount;
         window.state.lifetimeEarnings += amount;
         this.updateRank();
+        
+        if (window.threeEffects && window.threeEffects.triggerBalanceGlow) {
+            window.threeEffects.triggerBalanceGlow();
+        }
     },
 
     toggleStockMultiplier() {
