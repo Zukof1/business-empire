@@ -3,7 +3,7 @@
 An interactive business management simulator built with Three.js and modern JavaScript.
 
 ### 🚀 Play Now
-**[Click here to play Business Empire](https://zukof1.github.io/business-empire/)**
+**[Click here to play Business Empire](https://business-empire-ashy.vercel.app/)**
 
 ---
 
