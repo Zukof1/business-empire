@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#e6f4fc">
     <title>Business Empire: Banking</title>
+    <!-- Home Screen app -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="Assets/icons/icon-180.png">
+    <link rel="icon" type="image/png" href="Assets/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-title" content="Empire">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Baloo+2:wght@500;600;700&display=swap">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
@@ -19,7 +26,6 @@
         <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16H4v-4l2.200-5h11.600l2.200 5v4h-1M9 16h6M4 12h16" /><circle cx="7" cy="16.500" r="2" /><circle cx="17" cy="16.500" r="2" /></symbol>
         <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 16V8h9v8M12 11h5l4 3v2h-2M9 16h6" /><circle cx="7" cy="16.500" r="2" /><circle cx="17" cy="16.500" r="2" /></symbol>
         <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6" /></symbol>
-        <symbol id="i-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M8.500 8.500h.01M15.500 8.500h.01M12 12h.01M8.500 15.500h.01M15.500 15.500h.01" /></symbol>
         <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></symbol>
         <symbol id="i-store" viewBox="0 0 24 24"><path d="M4 11v9h16v-9M3 9l2-5h14l2 5c0 3-4.500 3-4.500 0 0 3-4.500 3-4.500 0 0 3-4.500 3-4.500 0 0 3-4.500 3-4.500 0zM9 20v-5h6v5" /></symbol>
         <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="10" rx="1.500" /><path d="M2 19h20" /></symbol>
@@ -35,16 +41,11 @@
         <symbol id="i-plane" viewBox="0 0 24 24"><path d="M10.500 3.500c1-1.500 3-1.500 3 .5v5l7.500 4.500v2.500l-7.500-2v4.500l2.500 2v1.500l-4-1-4 1v-1.500l2.500-2V14L3 16v-2.500L10.500 9z" /></symbol>
         <symbol id="i-party" viewBox="0 0 24 24"><path d="M3 21l5-13 8 8zM14 4v2M19 5l-2 2M20 11h-2M13 10c1-3 3-4 5-3" /></symbol>
         <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" /></symbol>
-        <symbol id="i-cards" viewBox="0 0 24 24"><rect x="3" y="7" width="11" height="14" rx="2" /><path d="M9 3h10a2 2 0 012 2v12M8.500 11.500L11 14l-2.500 2.500L6 14z" /></symbol>
         <symbol id="i-gem" viewBox="0 0 24 24"><path d="M6 4h12l3 5-9 11L3 9zM3 9h18M9 4L8 9l4 11 4-11-1-5" /></symbol>
-        <symbol id="i-cherry" viewBox="0 0 24 24"><circle cx="7" cy="17" r="3.500" /><circle cx="17" cy="16" r="3.500" /><path d="M7 13.500C8 9 11 5 17 3.500c-.5 4-.5 6 .5 9" /></symbol>
-        <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.700 6.200.9-4.500 4.400 1 6.200-5.500-2.900-5.500 2.900 1-6.200L3 9.600l6.200-.9z" /></symbol>
-        <symbol id="i-wheel" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" /><path d="M12 3v6M12 15v6M3 12h6M15 12h6" /></symbol>
         <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v6a4 4 0 01-8 0zM8 6H4c0 3 1.500 4.500 4 5M16 6h4c0 3-1.500 4.500-4 5M12 14v4M8 21h8M9.500 21l.8-3h3.4l.8 3" /></symbol>
         <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9.500 16h-19zM12 10v4M12 17h.01" /></symbol>
         <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></symbol>
         <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9M17 6l3 3M14 9l2 2" /></symbol>
-        <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 9V6h18v3a3 3 0 000 6v3H3v-3a3 3 0 000-6zM14 7v2M14 11v2M14 15v2" /></symbol>
     </svg>
 
     <div id="toastContainer" class="toast-container" role="status"></div>
@@ -147,108 +148,6 @@
             <div id="stockListContainer" class="stack"></div>
         </main>
 
-        <!-- Casino -->
-        <main id="casinoView" class="view hidden">
-            <div id="casinoGate" class="gate">
-                <div class="card gate-card">
-                    <span class="badge-icon badge-red"><svg class="icon"><use href="#i-ticket" /></svg></span>
-                    <h2>VIP pass</h2>
-                    <p>Slots, roulette and blackjack are for members.</p>
-                    <p class="figure">$10,000.00</p>
-                    <button id="buyCasinoBtn" class="btn btn-yellow btn-big">Buy VIP pass</button>
-                </div>
-            </div>
-
-            <div id="casinoContent" class="hidden">
-                <div id="casinoLobby" class="stack">
-                    <button id="btnOpenSlots" class="btn btn-yellow game-tile">
-                        <span><strong>Slots</strong><small>Win up to 30x</small></span>
-                        <svg class="icon"><use href="#i-cherry" /></svg>
-                    </button>
-                    <button id="btnOpenRoulette" class="btn btn-red game-tile">
-                        <span><strong>Roulette</strong><small>Green pays 14x</small></span>
-                        <svg class="icon"><use href="#i-wheel" /></svg>
-                    </button>
-                    <button id="btnOpenBlackjack" class="btn btn-green game-tile">
-                        <span><strong>Blackjack</strong><small>Beat the dealer</small></span>
-                        <svg class="icon"><use href="#i-cards" /></svg>
-                    </button>
-                </div>
-
-                <!-- Slots -->
-                <div id="casinoSlotsView" class="stack hidden">
-                    <div class="card stack">
-                        <div class="reels">
-                            <div id="slot1-container" class="reel"><span id="slot1" class="reel-item">?</span></div>
-                            <div id="slot2-container" class="reel"><span id="slot2" class="reel-item">?</span></div>
-                            <div id="slot3-container" class="reel"><span id="slot3" class="reel-item">?</span></div>
-                        </div>
-                        <p id="slotResult" class="result-line">Pick a bet and spin</p>
-                    </div>
-                    <div class="bet-row">
-                        <label class="bet-input"><span>$</span><input type="number" inputmode="numeric" id="slotsBetInput" value="100" min="10" aria-label="Your bet"></label>
-                        <div class="bet-chips" data-chips-for="slotsBetInput"></div>
-                    </div>
-                    <button id="spinSlotsBtn" class="btn btn-yellow btn-big">Spin</button>
-                    <div class="card paytable">
-                        <p class="row between"><span>Three 7s</span><strong>30x</strong></p>
-                        <p class="row between"><span>Any other three of a kind</span><strong>10x</strong></p>
-                    </div>
-                </div>
-
-                <!-- Roulette -->
-                <div id="casinoRouletteView" class="stack hidden">
-                    <div class="wheel">
-                        <div class="needle"></div>
-                        <div id="rouletteRail" class="rail"></div>
-                    </div>
-                    <div class="card row between">
-                        <span class="muted">Last rolls</span>
-                        <div id="rouletteHistory" class="history"></div>
-                    </div>
-                    <p id="rouletteResult" class="card result-line">Place your bet</p>
-                    <div class="bet-row">
-                        <label class="bet-input"><span>$</span><input type="number" inputmode="numeric" id="rouletteBetInput" value="500" min="10" aria-label="Your bet"></label>
-                        <div class="bet-chips" data-chips-for="rouletteBetInput"></div>
-                    </div>
-                    <div class="trio">
-                        <button id="btnBetRed" class="btn btn-red btn-big">Red <small>2x</small></button>
-                        <button id="btnBetGreen" class="btn btn-green btn-big">Green <small>14x</small></button>
-                        <button id="btnBetBlack" class="btn btn-ink btn-big">Black <small>2x</small></button>
-                    </div>
-                </div>
-
-                <!-- Blackjack -->
-                <div id="casinoBlackjackView" class="stack hidden">
-                    <div id="bjTable" class="bj-table hidden">
-                        <div class="bj-side">
-                            <p>Dealer <strong id="bjDealerScore">?</strong></p>
-                            <div id="bjDealerHand" class="hand"></div>
-                        </div>
-                        <p id="bjStake" class="stake"></p>
-                        <div class="bj-side">
-                            <div id="bjPlayerHand" class="hand"></div>
-                            <p>Your hand <strong id="bjPlayerScore">0</strong></p>
-                        </div>
-                    </div>
-                    <p id="bjResult" class="card result-line">Place your bet</p>
-                    <div id="bjBetContainer" class="bet-row">
-                        <label class="bet-input"><span>$</span><input type="number" inputmode="numeric" id="bjBetInput" value="1000" min="10" aria-label="Your bet"></label>
-                        <div class="bet-chips" data-chips-for="bjBetInput"></div>
-                    </div>
-                    <div id="bjControlsDeal">
-                        <button id="btnBjDeal" class="btn btn-yellow btn-big wide">Deal</button>
-                    </div>
-                    <div id="bjControlsPlay" class="trio hidden">
-                        <button id="btnBjHit" class="btn btn-yellow btn-big">Hit</button>
-                        <button id="btnBjDouble" class="btn btn-green btn-big">Double</button>
-                        <button id="btnBjStand" class="btn btn-big">Stand</button>
-                    </div>
-                    <button id="btnBjReset" class="link-btn">Reset table</button>
-                </div>
-            </div>
-        </main>
-
         <!-- Stats -->
         <main id="profileView" class="view hidden">
             <div class="card rank-card">
@@ -264,19 +163,20 @@
                     <span id="statTotalEarnings" class="stat-figure">$0.00</span>
                 </div>
                 <div class="card">
-                    <span class="muted">Casino net</span>
-                    <span id="statCasinoPL" class="stat-figure">$0.00</span>
+                    <span class="muted">Taps made</span>
+                    <span id="statTotalClicks" class="stat-figure">0</span>
                 </div>
-            </div>
-
-            <div class="card row between">
-                <span class="muted">Taps made</span>
-                <strong id="statTotalClicks">0</strong>
             </div>
 
             <div class="card row between">
                 <div class="grow"><h3>Taxes</h3><span class="muted">0.5% of your money, every minute</span></div>
                 <button id="taxBtn" class="btn btn-yellow" aria-label="Taxes" aria-pressed="true">On</button>
+            </div>
+
+            <div class="card stack">
+                <div><h3>Backup</h3><span class="muted">Keep a copy of your game, or move it to another phone</span></div>
+                <button id="backupCopyBtn" class="btn btn-yellow btn-big wide">Copy backup code</button>
+                <button id="backupRestoreBtn" class="btn wide">Restore from a code</button>
             </div>
 
             <div id="prestigeContainer" class="card prestige">
@@ -297,6 +197,22 @@
                 <p>earned while you were away for <strong id="awayDuration"></strong></p>
                 <p class="away-note">While you are away your businesses work at 25% speed, for up to 2 hours.</p>
                 <button id="awayCollectBtn" class="btn btn-yellow btn-big wide">Collect</button>
+            </div>
+        </div>
+
+        <!-- Backup code box -->
+        <div id="backupModal" class="dialog hidden">
+            <div class="card dialog-card" role="dialog" aria-modal="true" aria-labelledby="backupTitle"
+                aria-describedby="backupHint">
+                <h2 id="backupTitle"></h2>
+                <p id="backupHint"></p>
+                <textarea id="backupCode" class="code-box" rows="4" aria-label="Backup code" autocomplete="off"
+                    autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+                <p id="backupError" class="text-red-400 hidden" role="alert"></p>
+                <div class="duo">
+                    <button id="backupCancel" class="btn btn-big">Cancel</button>
+                    <button id="backupNext" class="btn btn-big btn-yellow">Next</button>
+                </div>
             </div>
         </div>
 
@@ -325,10 +241,6 @@
                 <button id="navInvest" class="nav-btn">
                     <svg class="icon"><use href="#i-chart" /></svg><span>Trade</span>
                 </button>
-                <button id="navCasino" class="nav-btn">
-                    <svg class="icon"><use href="#i-dice" /></svg><span>Casino</span>
-                    <span id="casinoBadge" class="badge badge-alert"></span>
-                </button>
                 <button id="navProfile" class="nav-btn">
                     <svg class="icon"><use href="#i-user" /></svg><span>Stats</span>
                 </button>
@@ -337,10 +249,10 @@
     </div>
 
     <!-- Script Imports -->
-    <script src="state.js?v=19"></script>
-    <script src="logic.js?v=19"></script>
-    <script src="ui.js?v=19"></script>
-    <script src="threeRender.js?v=19"></script>
+    <script src="state.js?v=21"></script>
+    <script src="logic.js?v=21"></script>
+    <script src="ui.js?v=21"></script>
+    <script src="threeRender.js?v=21"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             window.loadGame();

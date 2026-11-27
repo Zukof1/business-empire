@@ -7,9 +7,9 @@ Written 27 November 2026, at the end of a long session. Check anything important
 - **Project:** `C:\Users\faizy\.gemini\antigravity\scratch\business-empire`, a phone-first idle business game in plain HTML, CSS and JavaScript.
 - **Repo:** `https://github.com/Zukof1/business-empire.git`, branch `main`.
 - **Live site:** `https://business-empire-ashy.vercel.app/`. Check that it shows the latest push (the script tags should read the current `?v=` number).
-- **Committed and pushed:** items 1 to 9 below and the tax switch on Stats, to `main`. The large photo originals were left out.
+- **Committed and pushed:** items 1 to 11 below and the tax switch on Stats, to `main`. The large photo originals were left out.
 - Do not commit or push unless the owner asks; suggesting a commit early is sensible.
-- **Tests:** `node --test tests/*.test.js` gave **186 passing** (Node 24).
+- **Tests:** `node --test tests/*.test.js` gave **187 passing** (Node 24).
 - **Not done:** nothing has been tried on a real phone, and pacing has not been played through.
 
 ## What was built
@@ -23,6 +23,8 @@ Written 27 November 2026, at the end of a long session. Check anything important
 7. **Photos** for dealer cars, taxis and all Lifestyle items.
 8. **In-game confirm box** replacing browser pop-ups.
 9. **Rental Properties.**
+10. **Casino removed**, "for now" in the owner's words; nothing took its place. The casino is in commit `65fad07` if it is wanted back. Older saves get unpaid winnings and unfinished Blackjack bets returned on load; a bought casino pass is not refunded.
+11. **Backup codes** on Stats, a request for protected storage, and a **Home Screen app** named Empire with a coin icon. Design in `docs/superpowers/specs/2026-11-27-backup-design.md`.
 
 Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` and `docs/superpowers/plans/`. Where an older document disagrees with a newer one or with the code, the code is current.
 
@@ -39,6 +41,7 @@ Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` an
 | `tests/harness.js` | Loads the game scripts into a Node `vm` context with a small browser stand-in |
 | `tests/layout-check.js` | Browser layout check |
 | `.vercelignore` | Notes and tests kept off the live site |
+| `manifest.webmanifest`, `Assets/icons` | Home Screen app name and icons |
 | `Assets/cars`, `Assets/lifestyle` | Large originals, **not loaded by the game** |
 | `Assets/cars-web`, `Assets/lifestyle-web` | Small copies the game loads |
 
@@ -46,11 +49,11 @@ Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` an
 
 - `window.state` and the `state` variable in `state.js` must stay **the same object**. Load with `Object.assign`, never by replacing it.
 - Do not add script files without updating `buildBundle.js`, which lists them by name.
-- Bump the `?v=` number on the four script tags when scripts change (currently `v=19`).
+- Bump the `?v=` number on the four script tags when scripts change (currently `v=21`).
 - Ask before risky actions with `logic.ask({title, message, yes, danger}, action)`. Never call `confirm()` directly. Re-check conditions inside the action, because the game keeps running while the box is open.
 - Time rules: wall-clock timestamps for auctions, demand, shop earnings, rent and applicant waits; taxis, home wear, departures and home prices use the frame time, capped at 1 second, so they never run while the game is away.
 - Element ids are used by tests and by per-frame updates. Rename with care.
-- Tapped things are "chunky" buttons, at least 44px. Yellow is the main action, green upgrade or sell, red loss or reset. One blue balance panel per screen. Light blue by day, navy in the casino. Fonts are Baloo 2 and Archivo.
+- Tapped things are "chunky" buttons, at least 44px. Yellow is the main action, green upgrade or sell, red loss or reset. One blue balance panel per screen. Light blue backgrounds. Fonts are Baloo 2 and Archivo.
 - Files mix line endings and Git warns about CRLF. Keep each file's existing endings when editing by script.
 
 ## Current game rules
@@ -64,8 +67,8 @@ Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` an
 | Rental Properties | $150,000, up to 4 homes. Studio $40k, $60/s; house $150k, $250/s; villa $600k, $1,100/s. Four tenant types, Low/Fair/High rent, wear and repairs, prices 80% to 125%, 10% selling fee, $100k agent. Full rules in the design document |
 | Car Dealership | $2,500 license. Common, Rare and Classic cars, inspect 5%, one 50/50 haggle for 10% off, demand 80% to 130% each minute, repair 20%, 30 second auction wait |
 | Lifestyle | 12 items in Style, Homes, Toys, Experiences; experiences repeat; kept through prestige; earns nothing |
-| Casino | Slots: triple 7s 30×, other triples 10×. Green roulette 14×. Blackjack has double down |
 | Prestige | Needs $1M lifetime earnings, adds +10% income |
+| Backup | A `BE1:` code holding the whole save. Restoring asks first, pays nothing for the time since, and refuses codes containing markup |
 | Taxes | 0.5% of the balance each minute of play. A switch on Stats turns them off; on by default, kept through prestige |
 
 Exact values are the constants at the top of `logic.js`.
@@ -91,7 +94,6 @@ The owner makes them in Gemini from prompts we write and saves them under the na
 
 - A dealership car with no fault always sells at a profit, even at the lowest demand. Lowering minimum demand to 60% was suggested and not answered.
 - The Prestige card on Stats says you lose "money, businesses, stocks and cars"; it leaves out taxis, rental homes and more. The confirm box lists them correctly.
-- The green roulette picture has a grey checkerboard baked in.
 - `run.bat` opens a missing `expo-app` folder. The owner chose to leave it. `hustler-empire` next door is a separate app.
 - `buildBundle.js` embeds only the PNGs at the top of `Assets/`, so car and Lifestyle photos would be missing from a bundle.
 - Several generated pictures closely resemble real products (cars, watches). Matters if the game is sold.

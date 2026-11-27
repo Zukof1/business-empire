@@ -9,7 +9,6 @@
 
     S.balance = 5000000;
     S.hasDealerLicense = true;
-    S.hasCasinoMembership = true;
     // A current player has at most the shop, the taxi company and rental homes
     S.businesses = [];
     L.buyBusiness('retail');
@@ -27,7 +26,6 @@
             home(3, 'studio', { applicants }),
             home(4, 'villa', { waitUntil: Date.now() + 60000 })
         ] };
-    S.blackjack = { active: false, playerHand: [], dealerHand: [], status: '', bet: 0 };
     S.away = null;
     S.managers = {};
     S.garageSlots = 3;
@@ -37,7 +35,6 @@
     ];
     S.nextAuctionAt = 0;
     L.browseAuctions();
-    L.spinning.slots = L.spinning.roulette = false;
 
     const footer = document.querySelector('footer');
     const header = document.querySelector('header');
@@ -71,7 +68,6 @@
     }
 
     const view = id => document.getElementById(id + 'View');
-    const click = id => document.getElementById(id).click();
 
     S.away = { amount: 1234567890, ms: 26 * 3600 * 1000 };
     U.switchTab('vault'); U.updateUI();
@@ -93,24 +89,15 @@
     U.switchTab('lifestyle'); checkScreen('lifestyle', view('lifestyle'));
     U.switchTab('invest'); checkScreen('trade', view('invest'));
     U.switchTab('profile'); checkScreen('stats', view('profile'));
-    U.switchTab('casino'); checkScreen('casino lobby', view('casino'));
-
-    const casino = view('casino');
-    const short = innerHeight < 500;
-    click('btnOpenSlots'); checkScreen('slots', casino, short ? [] : ['spinSlotsBtn']);
-    U.showCasinoLobby(); click('btnOpenRoulette'); checkScreen('roulette', casino, short ? [] : ['btnBetRed', 'btnBetBlack', 'btnBetGreen']);
-    U.showCasinoLobby(); click('btnOpenBlackjack');
-    const realGetCard = L.getCard;
-    L.getCard = () => ({ value: '3', suit: '♠' });
-    L.bjDeal(1000);
-    L.bjHit(); L.bjHit();
-    checkScreen('blackjack hand', casino, short ? [] : ['btnBjHit', 'btnBjStand', 'btnBjDouble']);
-    const tableDisplay = getComputedStyle(document.getElementById('bjTable')).display;
-    if (tableDisplay !== 'flex') problems.push(`blackjack: table rows have no spacing (display ${tableDisplay})`);
-    L.getCard = realGetCard;
-    L.bjReset(); // asks before giving up a live bet
+    U.openBackup('restore');
+    checkScreen('restore box', document.getElementById('backupModal'), ['backupCancel', 'backupNext']);
+    U.closeBackup();
+    U.openBackup('copy', window.makeBackupCode());
+    checkScreen('copy box', document.getElementById('backupModal'), ['backupCancel']);
+    U.closeBackup();
+    L.sellTaxi(1); // asks first
     checkScreen('confirm box', document.getElementById('confirmModal'), ['confirmYes', 'confirmNo']);
-    U.answer(true);
+    U.answer(false);
     S.dealerCars = [];
     S.auctionCars = [];
     U.switchTab('vault');

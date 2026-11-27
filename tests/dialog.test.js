@@ -125,16 +125,6 @@ test('reset all progress waits for the answer', () => {
     assert.ok(!g.storage.has(KEY));
 });
 
-test('resetting a Blackjack hand waits for the answer', () => {
-    const { state, logic, ui, open } = game();
-    state.blackjack = { active: true, playerHand: [{ value: '5', suit: '♠' }], dealerHand: [{ value: '9', suit: '♠' }], status: 'Playing', bet: 1000 };
-    logic.bjReset();
-    assert.ok(open());
-    assert.strictEqual(state.blackjack.active, true);
-    ui.answer(true);
-    assert.strictEqual(state.blackjack.active, false);
-});
-
 test('the page has the confirm box, announced as an alert dialog', () => {
     const html = read('index.html');
     assert.match(html, /id="confirmModal"/);

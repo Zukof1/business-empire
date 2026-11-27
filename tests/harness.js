@@ -36,6 +36,8 @@ function createGame({ storage = new Map(), files = ['state.js', 'logic.js'] } = 
         },
         confirm: () => true,
         location: { reload() {} },
+        btoa,
+        atob,
         setTimeout: fn => timeouts.push(fn),
         clearTimeout() {},
         setInterval: fn => intervals.push(fn),

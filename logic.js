@@ -63,10 +63,6 @@ const AWAY_RATE = 0.25;
 // Longest step the tax, dividend and market timers take in one frame, so time away is not replayed
 const MAX_FRAME_MS = 1000;
 
-const SLOT_SEVENS_PAYOUT = 30;
-const SLOT_TRIPLE_PAYOUT = 10;
-const ROULETTE_GREEN_PAYOUT = 14;
-
 const PRESTIGE_EARNINGS = 1000000;
 
 // Things to spend money on for fun. They earn nothing.
@@ -576,7 +572,7 @@ const logic = {
         if (this.getPrestigeRemaining() > 0) return;
         this.ask({
             title: 'Prestige?',
-            message: 'You lose your money, businesses, managers, taxis, rental homes, stocks, cars, dealer license and casino pass. '
+            message: 'You lose your money, businesses, managers, taxis, rental homes, stocks, cars and dealer license. '
                 + 'Your Lifestyle collection stays, and you get an extra permanent +10% income bonus.',
             yes: 'Prestige',
             danger: true
@@ -590,13 +586,8 @@ const logic = {
             window.state.dealerCars = [];
             window.state.carDealership = null;
             window.state.hasDealerLicense = false;
-            window.state.hasCasinoMembership = false;
             window.state.lifetimeEarnings = 0;
             window.state.totalClicks = 0;
-            window.state.casinoProfitLoss = 0;
-            window.state.pendingPayout = 0;
-            window.state.blackjack = { active: false, playerHand: [], dealerHand: [], status: 'Ready to play', bet: 0 };
-            window.state.rouletteHistory = [];
             window.state.away = null;
             window.state.managers = {};
             window.state.taxi = null;
@@ -672,319 +663,15 @@ const logic = {
         }
     },
 
-    buyCasinoMembership() {
-        if (window.state.balance >= 10000 && !window.state.hasCasinoMembership) {
-            window.state.balance -= 10000;
-            window.state.hasCasinoMembership = true;
-            this.logEvent(`Purchased High Roller Membership ($10,000)`, "text-fuchsia-400");
-            if (window.ui) {
-                window.ui.updateUI();
-                window.ui.switchTab('casino');
-            }
-        }
-    },
-
-    // Winnings are decided before the animation ends. They are held in the save
-    // until then, so closing the game mid-spin does not lose them.
-    holdPayout(amount) {
-        window.state.pendingPayout = (window.state.pendingPayout || 0) + amount;
-    },
-
-    releasePayout(amount) {
-        window.state.pendingPayout = Math.max(0, (window.state.pendingPayout || 0) - amount);
-        this.addMoney(amount);
-        window.state.casinoProfitLoss += amount;
-    },
-
-    settlePendingPayouts() {
-        if (window.state.pendingPayout > 0) this.releasePayout(window.state.pendingPayout);
-    },
-
-    // Which games are mid-animation. Not saved: a reload ends any spin.
-    spinning: { slots: false, roulette: false },
-
-    spinSlots(bet = 100) {
-        if (!this.spinning.slots && window.state.balance >= bet && bet >= 10) {
-            this.spinning.slots = true;
-            window.state.balance -= bet;
-            window.state.casinoProfitLoss -= bet;
-            const symbols = ['🎰', '💎', '🍒', '7️⃣'];
-            const r1 = symbols[Math.floor(Math.random() * symbols.length)];
-            const r2 = symbols[Math.floor(Math.random() * symbols.length)];
-            const r3 = symbols[Math.floor(Math.random() * symbols.length)];
-
-            let winText = "No luck.";
-            let color = "text-slate-400";
-
-            let payout = 0;
-            let logMsg = '';
-            let logColor = '';
-
-            if (r1 === r2 && r2 === r3) {
-                if (r1 === '7️⃣') {
-                    payout = bet * SLOT_SEVENS_PAYOUT;
-                    winText = `JACKPOT! +$${payout.toLocaleString()}`;
-                    color = "text-fuchsia-400";
-                    logMsg = `Casino Jackpot! +$${payout.toLocaleString()}`;
-                    logColor = "text-fuchsia-400";
-                } else {
-                    payout = bet * SLOT_TRIPLE_PAYOUT;
-                    winText = `WINNER! +$${payout.toLocaleString()}`;
-                    color = "text-emerald-400";
-                    logMsg = `Casino slots win! +$${payout.toLocaleString()}`;
-                    logColor = "text-emerald-400";
-                }
-            }
-
-            this.holdPayout(payout);
-
-            if (window.ui) {
-                window.ui.renderSlotsResult(r1, r2, r3, winText, color);
-                window.ui.updateUI();
-            }
-
-            setTimeout(() => {
-                this.spinning.slots = false;
-                if (payout > 0) {
-                    this.releasePayout(payout);
-                    this.logEvent(logMsg, logColor);
-                    if (window.ui) window.ui.triggerBalancePulse('green');
-                } else {
-                    if (window.ui) window.ui.triggerBalancePulse('red');
-                }
-                if (window.ui) window.ui.updateUI();
-            }, 3500);
-        }
-    },
-
-    playRoulette(color, bet = 500) {
-        if (!this.spinning.roulette && window.state.balance >= bet && bet >= 10) {
-            this.spinning.roulette = true;
-            window.state.balance -= bet;
-            window.state.casinoProfitLoss -= bet;
-
-            const pattern = ['R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'G'];
-            const resultIdx = Math.floor(Math.random() * pattern.length);
-            const resultColorCode = pattern[resultIdx];
-            let resultColorName = resultColorCode === 'R' ? 'Red' : (resultColorCode === 'B' ? 'Black' : 'Green');
-
-            const win = color === resultColorName;
-
-            let msg = '';
-            let tColor = '';
-
-            let payout = 0;
-            let logMsg = '';
-            let logColor = '';
-
-            if (win) {
-                payout = color === 'Green' ? bet * ROULETTE_GREEN_PAYOUT : bet * 2;
-                msg = `Won! +$${(payout - bet).toLocaleString()} (${color})`;
-                tColor = "text-emerald-400";
-                logMsg = `Roulette Win: +$${payout.toLocaleString()}`;
-                logColor = "text-emerald-400";
-            } else {
-                msg = `Lost $${bet.toLocaleString()} (${resultColorName})`;
-                tColor = "text-red-400";
-                logMsg = `Roulette Loss: -$${bet.toLocaleString()}`;
-                logColor = "text-red-400";
-            }
-
-            this.holdPayout(payout);
-
-            if (window.ui) {
-                window.ui.renderRouletteResult(msg, tColor, resultColorName);
-                window.ui.updateUI();
-            }
-
-            setTimeout(() => {
-                this.spinning.roulette = false;
-                if (payout > 0) {
-                    this.releasePayout(payout);
-                    this.logEvent(logMsg, logColor);
-                    if (window.ui) window.ui.triggerBalancePulse('green');
-                } else {
-                    this.logEvent(logMsg, logColor);
-                    if (window.ui) window.ui.triggerBalancePulse('red');
-                }
-                if (window.ui) window.ui.updateUI();
-            }, 6000);
-        }
-    },
-
-    // Simplified Blackjack
-    getCard() {
-        const suits = ['♠', '♥', '♦', '♣'];
-        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-        const v = values[Math.floor(Math.random() * values.length)];
-        const s = suits[Math.floor(Math.random() * suits.length)];
-        return { value: v, suit: s };
-    },
-
-    calcHand(hand) {
-        let sum = 0;
-        let aces = 0;
-        hand.forEach(c => {
-            if (['J', 'Q', 'K'].includes(c.value)) sum += 10;
-            else if (c.value === 'A') { sum += 11; aces += 1; }
-            else sum += parseInt(c.value);
-        });
-        while (sum > 21 && aces > 0) {
-            sum -= 10;
-            aces -= 1;
-        }
-        return sum;
-    },
-
-    bjDeal(bet = 1000) {
-        if (!window.state.blackjack) {
-            window.state.blackjack = { active: false, playerHand: [], dealerHand: [], status: 'Ready to play', bet: 0 };
-        }
-        if (window.state.balance >= bet && bet >= 10 && !window.state.blackjack.active) {
-            window.state.balance -= bet;
-            window.state.casinoProfitLoss -= bet;
-            if (window.ui) window.ui.triggerBalancePulse('red');
-            window.state.blackjack = {
-                active: true,
-                playerHand: [this.getCard(), this.getCard()],
-                dealerHand: [this.getCard()],
-                status: 'Playing',
-                bet: bet
-            };
-
-            const pScore = this.calcHand(window.state.blackjack.playerHand);
-            if (pScore === 21) {
-                window.state.blackjack.active = false;
-                const payout = bet * 2.5;
-                this.addMoney(payout);
-                window.state.casinoProfitLoss += payout;
-                window.state.blackjack.status = `BLACKJACK! +$${payout.toLocaleString()}`;
-                this.logEvent(`Blackjack dealt! +$${payout.toLocaleString()}`, "text-fuchsia-400");
-                if (window.ui) window.ui.triggerBalancePulse('green');
-            }
-
-            if (window.ui) {
-                window.ui.renderBlackjack();
-                window.ui.updateUI();
-            }
-        }
-    },
-
-    bjHit() {
-        if (!window.state.blackjack || !window.state.blackjack.active) return;
-        
-        window.state.blackjack.playerHand.push(this.getCard());
-        const pScore = this.calcHand(window.state.blackjack.playerHand);
-        
-        if (pScore > 21) {
-            this.bjBust();
-        } else if (pScore === 21) {
-            this.bjStand(); // Auto stand on 21
-            return;
-        }
-
-        if (window.ui) {
-            window.ui.renderBlackjack();
-            window.ui.updateUI();
-        }
-    },
-
-    bjBust() {
-        window.state.blackjack.active = false;
-        const bet = window.state.blackjack.bet;
-        window.state.blackjack.status = `Bust! Lost $${bet.toLocaleString()}`;
-        this.logEvent(`Blackjack Bust! -$${bet.toLocaleString()}`, "text-red-400");
-    },
-
-    canDouble() {
-        const bj = window.state.blackjack;
-        return !!bj && bj.active && bj.playerHand.length === 2 && window.state.balance >= bj.bet;
-    },
-
-    // Double the bet, take exactly one more card, then stand
-    bjDouble() {
-        if (!this.canDouble()) return;
-        const bj = window.state.blackjack;
-
-        window.state.balance -= bj.bet;
-        window.state.casinoProfitLoss -= bj.bet;
-        bj.bet *= 2;
-        bj.playerHand.push(this.getCard());
-
-        if (this.calcHand(bj.playerHand) <= 21) {
-            this.bjStand();
-            return;
-        }
-        this.bjBust();
-        if (window.ui) {
-            window.ui.renderBlackjack();
-            window.ui.updateUI();
-        }
-    },
-
-    bjStand() {
-        if (!window.state.blackjack || !window.state.blackjack.active) return;
-
-        let dHand = window.state.blackjack.dealerHand;
-        while (this.calcHand(dHand) < 17) {
-            dHand.push(this.getCard());
-        }
-
-        const pScore = this.calcHand(window.state.blackjack.playerHand);
-        const dScore = this.calcHand(dHand);
-        const bet = window.state.blackjack.bet;
-
-        window.state.blackjack.active = false;
-        let payout = 0;
-        if (dScore > 21 || pScore > dScore) {
-            payout = bet * 2;
-            this.addMoney(payout);
-            window.state.casinoProfitLoss += payout;
-            window.state.blackjack.status = `You Win! +$${payout.toLocaleString()}`;
-            this.logEvent(`Blackjack Win! +$${payout.toLocaleString()}`, "text-emerald-400");
-            if (window.ui) window.ui.triggerBalancePulse('green');
-        } else if (pScore === dScore) {
-            payout = bet;
-            this.addMoney(payout);
-            window.state.casinoProfitLoss += payout;
-            window.state.blackjack.status = `Push. Refunded $${payout.toLocaleString()}`;
-        } else {
-            window.state.blackjack.status = `Dealer Wins. Lost $${bet.toLocaleString()}`;
-            this.logEvent(`Blackjack Loss! -$${bet.toLocaleString()}`, "text-red-400");
-        }
-
-        if (window.ui) {
-            window.ui.renderBlackjack();
-            window.ui.updateUI();
-        }
-    },
-
-    bjReset() {
+    // The casino was removed. Hands back anything an older save was still holding.
+    returnCasinoMoney() {
+        const winnings = window.state.pendingPayout || 0;
         const hand = window.state.blackjack;
-        if (hand && hand.active) {
-            this.ask({
-                title: 'Reset the table?',
-                message: `You will lose your $${hand.bet.toLocaleString()} bet.`,
-                yes: 'Reset',
-                danger: true
-            }, () => this.clearBlackjack());
-            return;
-        }
-        this.clearBlackjack();
-    },
-
-    clearBlackjack() {
-        window.state.blackjack = {
-            active: false,
-            playerHand: [],
-            dealerHand: [],
-            status: 'Ready to play',
-            bet: 0
-        };
-        if (window.ui) {
-            window.ui.renderBlackjack();
-            window.ui.updateUI();
-        }
+        const stake = hand?.active ? hand.bet || 0 : 0;
+        window.state.pendingPayout = 0;
+        window.state.blackjack = null;
+        if (winnings > 0) this.addMoney(winnings);
+        window.state.balance += stake; // the player's own money, so not earnings
     },
 
     pickCarTier(roll = Math.random()) {

@@ -1,7 +1,5 @@
 const BUSINESS_ICONS = { retail: 'store', startup: 'laptop', estate: 'building', corp: 'globe' };
-const SLOT_ICONS = { '🎰': 'star', '💎': 'gem', '🍒': 'cherry' };
-const SCREEN_TITLES = { vault: 'Vault', lifestyle: 'Lifestyle', invest: 'Stocks', casino: 'Casino', profile: 'Your empire' };
-const GAME_TITLES = { slots: 'Slots', roulette: 'Roulette', blackjack: 'Blackjack' };
+const SCREEN_TITLES = { vault: 'Vault', lifestyle: 'Lifestyle', invest: 'Stocks', profile: 'Your empire' };
 // Borrowed from Lifestyle until the homes have their own photos
 const HOME_PHOTOS = {
     studio: 'lifestyle-web/apartment',
@@ -38,119 +36,59 @@ const ui = {
             'saveIndicator', 'saveDot', 'saveLabel', 'toastContainer',
             'awayModal', 'awayAmount', 'awayDuration', 'awayCollectBtn',
             'confirmModal', 'confirmTitle', 'confirmMessage', 'confirmYes', 'confirmNo',
-            'navVault', 'navLifestyle', 'navInvest', 'navCasino', 'navProfile', 'dealerBadge', 'casinoBadge',
-            'vaultView', 'lifestyleView', 'investView', 'casinoView', 'profileView', 'lifestyleContent',
+            'navVault', 'navLifestyle', 'navInvest', 'navProfile', 'dealerBadge',
+            'vaultView', 'lifestyleView', 'investView', 'profileView', 'lifestyleContent',
             'workBtn', 'clickValueDisplay', 'efficiencyDisplay', 'businessesList', 'storeCountDisplay',
             'vaultHome', 'businessDetail', 'startBusinessBtn',
             'marketContent', 'carDemandList', 'demandTimer',
             'garageStatus', 'buyGarageBtn', 'garageSlotsContainer',
             'auctionSection', 'browseAuctionsBtn', 'browseAuctionsLabel', 'auctionResultsList',
             'stockListContainer', 'portfolioValueDisplay',
-            'casinoGate', 'casinoContent', 'buyCasinoBtn', 'casinoLobby',
-            'btnOpenSlots', 'btnOpenRoulette', 'btnOpenBlackjack',
-            'casinoSlotsView', 'casinoRouletteView', 'casinoBlackjackView',
-            'slotResult', 'spinSlotsBtn', 'slotsBetInput',
-            'rouletteResult', 'rouletteRail', 'rouletteHistory', 'rouletteBetInput',
-            'btnBetRed', 'btnBetBlack', 'btnBetGreen',
-            'bjTable', 'bjStake', 'bjDealerScore', 'bjDealerHand', 'bjPlayerScore', 'bjPlayerHand', 'bjResult',
-            'bjControlsDeal', 'bjControlsPlay', 'btnBjDeal', 'btnBjHit', 'btnBjStand', 'btnBjDouble',
-            'btnBjReset', 'bjBetInput', 'bjBetContainer',
-            'statRank', 'statTotalEarnings', 'statTotalClicks', 'statCasinoPL',
-            'rankProgressBar', 'rankProgressText', 'prestigeBtn', 'prestigeInfo', 'hardResetBtn', 'taxBtn'
+            'statRank', 'statTotalEarnings', 'statTotalClicks',
+            'rankProgressBar', 'rankProgressText', 'prestigeBtn', 'prestigeInfo', 'hardResetBtn', 'taxBtn',
+            'backupCopyBtn', 'backupRestoreBtn', 'backupModal', 'backupTitle', 'backupHint', 'backupCode',
+            'backupError', 'backupCancel', 'backupNext'
         ];
         this.elements = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
-        this.elements.betChips = document.querySelectorAll('[data-chips-for]');
         this.elements.behindDialog = document.querySelectorAll('#app > header, #app > main, #app > footer, #awayModal');
     },
 
     bindEvents() {
         const el = this.elements;
         const l = window.logic;
-        const bet = input => parseInt(input?.value) || 10;
 
         el.workBtn?.addEventListener('click', (e) => l.doWork(e));
 
         el.navVault?.addEventListener('click', () => this.switchTab('vault'));
         el.navLifestyle?.addEventListener('click', () => this.switchTab('lifestyle'));
         el.navInvest?.addEventListener('click', () => this.switchTab('invest'));
-        el.navCasino?.addEventListener('click', () => this.switchTab('casino'));
         el.navProfile?.addEventListener('click', () => this.switchTab('profile'));
 
-        el.buyCasinoBtn?.addEventListener('click', () => l.buyCasinoMembership());
-
-        el.spinSlotsBtn?.addEventListener('click', () => l.spinSlots(bet(el.slotsBetInput)));
-        el.btnBetRed?.addEventListener('click', () => l.playRoulette('Red', bet(el.rouletteBetInput)));
-        el.btnBetBlack?.addEventListener('click', () => l.playRoulette('Black', bet(el.rouletteBetInput)));
-        el.btnBetGreen?.addEventListener('click', () => l.playRoulette('Green', bet(el.rouletteBetInput)));
-        el.btnBjDeal?.addEventListener('click', () => l.bjDeal(bet(el.bjBetInput)));
-        el.btnBjHit?.addEventListener('click', () => l.bjHit());
-        el.btnBjStand?.addEventListener('click', () => l.bjStand());
-        el.btnBjDouble?.addEventListener('click', () => l.bjDouble());
-        el.btnBjReset?.addEventListener('click', () => l.bjReset());
         el.browseAuctionsBtn?.addEventListener('click', () => l.browseAuctions());
-        this.renderBetChips();
 
         el.hardResetBtn?.addEventListener('click', () => window.hardReset());
         el.awayCollectBtn?.addEventListener('click', () => l.collectAway());
         el.confirmYes?.addEventListener('click', () => this.answer(true));
         el.confirmNo?.addEventListener('click', () => this.answer(false));
         el.confirmModal?.addEventListener('click', e => { if (e.target === el.confirmModal) this.answer(false); });
-        document.addEventListener?.('keydown', e => { if (e.key === 'Escape') this.answer(false); });
+        document.addEventListener?.('keydown', e => {
+            if (e.key !== 'Escape') return;
+            this.answer(false);
+            this.closeBackup();
+        });
+        el.backupCopyBtn?.addEventListener('click', () => this.copyBackup());
+        el.backupRestoreBtn?.addEventListener('click', () => this.openBackup('restore'));
+        el.backupNext?.addEventListener('click', () => this.submitBackup());
+        el.backupCancel?.addEventListener('click', () => this.closeBackup());
         el.prestigeBtn?.addEventListener('click', () => l.prestige());
         el.taxBtn?.addEventListener('click', () => l.toggleTaxes());
 
-        // Casino sub-navigation
-        el.btnOpenSlots?.addEventListener('click', () => this.showCasinoView('slots'));
-        el.btnOpenRoulette?.addEventListener('click', () => {
-            this.showCasinoView('roulette');
-            this.initRouletteWheel(); // Recreate the wheel now that it is visible
-        });
-        el.btnOpenBlackjack?.addEventListener('click', () => this.showCasinoView('blackjack'));
         el.btnHeaderBack?.addEventListener('click', () => this.goBack());
         el.startBusinessBtn?.addEventListener('click', () => this.showBusiness('start'));
     },
 
     icon(name, extraClass = '') {
         return `<svg class="icon ${extraClass}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
-    },
-
-    renderBetChips() {
-        const chips = [['$100', 100], ['$500', 500], ['$1k', 1000], ['Max', 'max']];
-        this.elements.betChips?.forEach(row => {
-            const input = document.getElementById(row.dataset.chipsFor);
-            chips.forEach(([label, value]) => {
-                const chip = document.createElement('button');
-                chip.type = 'button';
-                chip.className = 'chip';
-                chip.innerText = label;
-                chip.addEventListener('click', () => {
-                    input.value = value === 'max' ? Math.floor(window.state.balance) : value;
-                    this.updateUI();
-                });
-                row.appendChild(chip);
-            });
-        });
-    },
-
-    // A casino game takes over the top panel: its name and a back button
-    showCasinoScreen(viewName) {
-        const el = this.elements;
-        const views = { slots: el.casinoSlotsView, roulette: el.casinoRouletteView, blackjack: el.casinoBlackjackView };
-        const playing = Boolean(views[viewName]);
-
-        Object.entries(views).forEach(([name, view]) => view?.classList[name === viewName ? 'remove' : 'add']('hidden'));
-        el.casinoLobby?.classList[playing ? 'add' : 'remove']('hidden');
-        el.app?.classList[playing ? 'add' : 'remove']('playing');
-        el.btnHeaderBack?.classList[playing ? 'remove' : 'add']('hidden');
-        if (el.headerTitle) el.headerTitle.innerText = GAME_TITLES[viewName] || SCREEN_TITLES.casino;
-    },
-
-    showCasinoLobby() {
-        this.showCasinoScreen('lobby');
-    },
-
-    showCasinoView(viewName) {
-        this.showCasinoScreen(viewName);
     },
 
     formatMoney(amount) {
@@ -169,7 +107,6 @@ const ui = {
             vault: [el.navVault, el.vaultView],
             lifestyle: [el.navLifestyle, el.lifestyleView],
             invest: [el.navInvest, el.investView],
-            casino: [el.navCasino, el.casinoView],
             profile: [el.navProfile, el.profileView]
         };
 
@@ -179,8 +116,9 @@ const ui = {
         });
 
         if (el.app) el.app.dataset.tab = tabId;
-        el.app?.classList[tabId === 'casino' ? 'add' : 'remove']('night');
-        this.showCasinoLobby();
+        // A business screen shrinks the top panel; other tabs get the full one back
+        el.app?.classList.remove('playing');
+        el.btnHeaderBack?.classList.add('hidden');
         if (el.headerTitle) el.headerTitle.innerText = SCREEN_TITLES[tabId] || SCREEN_TITLES.vault;
 
         this.updateDealerBadge();
@@ -191,19 +129,6 @@ const ui = {
             this.renderLifestyle();
         } else if (tabId === 'invest') {
             this.renderMarket();
-        } else if (tabId === 'casino') {
-            if (window.state.hasCasinoMembership) {
-                el.casinoBadge?.classList.add('hidden');
-                el.casinoGate?.classList.add('hidden');
-                el.casinoContent?.classList.remove('hidden');
-                if (!window.state.rouletteHistory) window.state.rouletteHistory = [];
-                this.initRouletteWheel();
-                this.renderBlackjack();
-            } else {
-                el.casinoBadge?.classList.remove('hidden');
-                el.casinoGate?.classList.remove('hidden');
-                el.casinoContent?.classList.add('hidden');
-            }
         } else if (tabId === 'profile') {
             this.renderProfile();
         }
@@ -458,204 +383,6 @@ const ui = {
         });
     },
 
-    slotSymbol(symbol) {
-        const icon = SLOT_ICONS[symbol];
-        return icon ? this.icon(icon, `symbol-${icon}`) : '<span class="symbol-seven">7</span>';
-    },
-
-    renderSlotsResult(r1, r2, r3, msg, color) {
-        const el = this.elements;
-        const reels = [
-            { el: document.getElementById('slot1-container'), val: r1, time: 1.5 },
-            { el: document.getElementById('slot2-container'), val: r2, time: 2.5 },
-            { el: document.getElementById('slot3-container'), val: r3, time: 3.5 }
-        ];
-        const symbols = ['🎰', '💎', '🍒', '7️⃣'];
-        const item = symbol => `<span class="reel-item">${this.slotSymbol(symbol)}</span>`;
-        const randomItem = () => item(symbols[Math.floor(Math.random() * symbols.length)]);
-
-        if (el.slotResult) {
-            el.slotResult.innerText = 'Spinning...';
-            el.slotResult.className = 'result-line text-violet-400';
-        }
-
-        reels.forEach(reel => {
-            if (!reel.el) return;
-
-            // More symbols for longer spins keeps the speed even. Index 1 is where the reel stops;
-            // the item above it hides the gap when the reel bounces.
-            const extra = Array.from({ length: Math.floor(reel.time * 25) }, randomItem).join('');
-            reel.el.innerHTML = `<div class="reel-inner">${randomItem()}${item(reel.val)}${extra}</div>`;
-
-            const inner = reel.el.querySelector('.reel-inner');
-            void inner.offsetWidth;
-
-            const itemHeight = inner.lastElementChild.offsetHeight || 64;
-            const reelHeight = reel.el.clientHeight || 83;
-            const startPos = -(inner.scrollHeight - reelHeight);
-            const endPos = -(itemHeight - (reelHeight - itemHeight) / 2);
-
-            inner.style.setProperty('--reel-start-position', `${startPos}px`);
-            inner.style.setProperty('--reel-end-position', `${endPos}px`);
-            inner.classList.add('slot-reel');
-            inner.style.animation = `reelSpin ${reel.time}s cubic-bezier(0.1, 0.1, 0.2, 1) forwards`;
-
-            setTimeout(() => {
-                inner.classList.remove('slot-reel');
-                inner.classList.add('slot-reel-stop');
-                inner.style.animation = 'none';
-                void inner.offsetWidth;
-                inner.style.animation = 'slot-clunk 0.3s ease-out forwards';
-            }, reel.time * 1000);
-        });
-
-        setTimeout(() => {
-            if (el.slotResult) {
-                el.slotResult.innerText = msg;
-                el.slotResult.className = `result-line ${color}`;
-            }
-        }, 3500);
-    },
-
-    initRouletteWheel() {
-        const track = document.getElementById('rouletteRail');
-        if (!track || window.logic.spinning.roulette) return; // rebuilding would cut off a spin
-        track.innerHTML = '';
-
-        // 15 tiles: 1 green, then red and black alternating
-        const sequence = ['G', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B'];
-        const images = { R: './Assets/roulette_red.png', B: './Assets/roulette_black.png', G: './Assets/roulette_green.png' };
-
-        // Six repeats give the wheel room to spin and still land
-        Array.from({ length: 6 }, () => sequence).flat().forEach((color, idx) => {
-            const tile = document.createElement('div');
-            tile.className = 'roulette-tile';
-            tile.style.backgroundImage = `url('${images[color]}')`;
-            tile.dataset.idx = idx;
-            tile.dataset.color = color;
-            track.appendChild(tile);
-        });
-        track.style.transform = 'translateX(0px)';
-        this.renderRouletteHistory();
-    },
-
-    renderRouletteHistory() {
-        const list = this.elements.rouletteHistory;
-        if (!list) return;
-        list.innerHTML = '';
-        (window.state.rouletteHistory || []).forEach(result => {
-            const dot = document.createElement('div');
-            const color = result === 'Red' ? 'red' : (result === 'Black' ? 'black' : 'green');
-            dot.className = `dot dot-${color}`;
-            dot.title = result;
-            list.appendChild(dot);
-        });
-    },
-
-    renderRouletteResult(msg, color, resultType) {
-        const el = this.elements;
-        const track = document.getElementById('rouletteRail');
-        if (el.rouletteResult) {
-            el.rouletteResult.innerText = 'Spinning...';
-            el.rouletteResult.className = 'card result-line text-violet-400';
-        }
-
-        if (track && resultType) {
-            const code = resultType === 'Red' ? 'R' : (resultType === 'Black' ? 'B' : 'G');
-            const matches = Array.from(track.children)
-                .slice(0, 15)
-                .map((tile, i) => (tile.dataset.color === code ? i : null))
-                .filter(i => i !== null);
-
-            const itemWidth = 68; // 64px tile plus 2px margin each side
-            const sequenceWidth = 15 * itemWidth;
-
-            // Jump back by whole sequences so the next spin starts near the front without a visible move
-            let startPos = 0;
-            if (track.dataset.currentDist !== undefined) {
-                const previous = parseFloat(track.dataset.currentDist);
-                startPos = previous + Math.floor(Math.abs(previous) / sequenceWidth) * sequenceWidth;
-            }
-
-            // Land on a matching tile three sequences ahead
-            const base = matches.length ? matches[Math.floor(Math.random() * matches.length)] : 0;
-            const target = base + 3 * 15;
-            const wobble = Math.floor(Math.random() * 40) - 20;
-            const dist = -((target * itemWidth) + wobble) + (track.parentElement.offsetWidth / 2) - itemWidth / 2;
-
-            // Reflow so the animation restarts
-            track.classList.remove('is-spinning');
-            void track.offsetWidth;
-            track.style.setProperty('--roulette-start-position', `${startPos}px`);
-            track.style.setProperty('--roulette-end-position', `${dist}px`);
-            track.dataset.currentDist = dist;
-            track.classList.add('is-spinning');
-
-            if (!window.state.rouletteHistory) window.state.rouletteHistory = [];
-            setTimeout(() => {
-                window.state.rouletteHistory.unshift(resultType);
-                if (window.state.rouletteHistory.length > 20) window.state.rouletteHistory.pop();
-                this.renderRouletteHistory();
-            }, 6000);
-        }
-
-        setTimeout(() => {
-            if (this.elements.rouletteResult) {
-                this.elements.rouletteResult.innerText = msg;
-                this.elements.rouletteResult.className = `card result-line ${color}`;
-            }
-        }, 6000);
-    },
-
-    renderCardSprite(card, isHidden = false, animDelay = 0) {
-        const delay = `style="animation-delay: ${animDelay}s"`;
-        if (isHidden) return `<div class="playing-card back card-anim" ${delay}>?</div>`;
-        const red = ['♥', '♦'].includes(card.suit) ? 'red' : '';
-        return `<div class="playing-card card-anim ${red}" ${delay}><span>${card.value}</span><span>${card.suit}</span></div>`;
-    },
-
-    renderBlackjack() {
-        const el = this.elements;
-        if (!el.bjTable) return;
-
-        const bj = window.state.blackjack;
-        const showResult = (text, tone) => {
-            el.bjResult.innerText = text;
-            el.bjResult.className = `card result-line ${tone}`;
-        };
-        // The bet is locked once the cards are out
-        el.bjBetContainer?.classList[bj.active ? 'add' : 'remove']('hidden');
-        el.bjControlsDeal.classList[bj.active ? 'add' : 'remove']('hidden');
-        el.bjControlsPlay.classList[bj.active ? 'remove' : 'add']('hidden');
-
-        if (!bj.active && bj.playerHand.length === 0) {
-            el.bjTable.classList.add('hidden');
-            showResult('Place your bet', 'text-slate-300');
-            return;
-        }
-
-        el.bjTable.classList.remove('hidden');
-        if (el.bjStake) el.bjStake.innerText = `Bet $${(bj.bet || 0).toLocaleString()}`;
-
-        if (bj.active) {
-            el.bjDealerHand.innerHTML = this.renderCardSprite(bj.dealerHand[0], false, 0) + this.renderCardSprite({}, true, 0.2);
-            el.bjDealerScore.innerText = '?';
-            showResult('Hit or stand', 'text-slate-300');
-        } else {
-            el.bjDealerHand.innerHTML = bj.dealerHand.map((c, i) => this.renderCardSprite(c, false, i * 0.1)).join('');
-            el.bjDealerScore.innerText = window.logic.calcHand(bj.dealerHand);
-
-            let tone = 'text-slate-300';
-            if (bj.status.includes('Win') || bj.status.includes('BLACKJACK')) tone = 'text-emerald-400';
-            if (bj.status.includes('Lost') || bj.status.includes('Bust')) tone = 'text-red-400';
-            if (bj.status.includes('Push')) tone = 'text-amber-400';
-            showResult(bj.status, tone);
-        }
-
-        el.bjPlayerHand.innerHTML = bj.playerHand.map((c, i) => this.renderCardSprite(c, false, i * 0.1)).join('');
-        el.bjPlayerScore.innerText = window.logic.calcHand(bj.playerHand);
-    },
-
     renderOwnedBusiness(b, biz, idx) {
         const level = biz.level || 1;
         const upgradeCost = window.logic.getBusinessUpgradeCost(biz);
@@ -747,6 +474,68 @@ const ui = {
         if (agreed) action();
     },
 
+    // ---- Backup ----
+
+    copyBackup() {
+        const code = window.makeBackupCode();
+        const byHand = () => this.openBackup('copy', code);
+        const clipboard = window.navigator?.clipboard;
+        if (!clipboard) return Promise.resolve(byHand());
+        // Called straight from the tap, as iPhone requires
+        return clipboard.writeText(code).then(
+            () => this.showToast('Backup code copied. Paste it into Notes to keep it safe.', 'good'),
+            byHand
+        );
+    },
+
+    // One box for both jobs: 'copy' shows a code to copy by hand, 'restore' takes one
+    openBackup(mode, code = '') {
+        const el = this.elements;
+        const copying = mode === 'copy';
+        el.backupTitle.innerText = copying ? 'Your backup code' : 'Restore your game';
+        el.backupHint.innerText = copying
+            ? 'Select all of it, copy it, and keep it somewhere safe.'
+            : 'Paste your backup code below.';
+        el.backupCode.value = code;
+        el.backupCode.readOnly = copying;
+        el.backupError.classList.add('hidden');
+        el.backupNext.classList[copying ? 'add' : 'remove']('hidden');
+        el.backupCancel.innerText = copying ? 'Done' : 'Cancel';
+        el.backupCancel.classList[copying ? 'add' : 'remove']('span-all');
+        el.backupModal.classList.remove('hidden');
+        el.behindDialog?.forEach(part => { part.inert = true; });
+        if (copying) {
+            el.backupCode.select();
+            el.backupCode.setSelectionRange?.(0, code.length); // iPhone can ignore select() on its own
+        }
+    },
+
+    closeBackup() {
+        const el = this.elements;
+        if (!el.backupModal || el.backupModal.classList.contains('hidden')) return;
+        el.backupModal.classList.add('hidden');
+        el.behindDialog?.forEach(part => { part.inert = false; });
+    },
+
+    submitBackup() {
+        const el = this.elements;
+        const save = window.readBackupCode(el.backupCode.value);
+        if (!save) {
+            el.backupError.innerText = "That code doesn't look right. Copy the whole code and try again.";
+            el.backupError.classList.remove('hidden');
+            return;
+        }
+        this.closeBackup();
+        this.ask({
+            title: 'Replace this game?',
+            message: `The saved game has ${this.formatMoney(save.balance)}. Your current progress will be overwritten.`,
+            yes: 'Replace',
+            danger: true
+        }, () => {
+            if (!window.restoreGame(save)) this.showToast('Could not save that game on this phone.');
+        });
+    },
+
     isDealerOpen() {
         return window.state.activeTab === 'vault' && this.businessScreen === 'dealer';
     },
@@ -765,8 +554,7 @@ const ui = {
     },
 
     goBack() {
-        if (window.state.activeTab === 'casino') this.showCasinoLobby();
-        else this.showBusiness(this.businessScreen === 'tenants' ? 'rentals' : null);
+        this.showBusiness(this.businessScreen === 'tenants' ? 'rentals' : null);
     },
 
     getBusinessTitle(screen) {
@@ -1407,12 +1195,6 @@ const ui = {
             el.rankProgressText.innerText = next ? `${this.formatMoney(remaining)} to ${next}` : 'Top rank reached';
         }
 
-        const casino = window.state.casinoProfitLoss || 0;
-        if (el.statCasinoPL) {
-            el.statCasinoPL.innerText = `${casino >= 0 ? '+' : '-'}${this.formatMoney(Math.abs(casino))}`;
-            el.statCasinoPL.className = `stat-figure ${casino >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
-        }
-
         if (el.taxBtn) {
             const on = window.logic.taxesOn();
             el.taxBtn.innerText = on ? 'On' : 'Off';
@@ -1529,31 +1311,6 @@ const ui = {
         const clickValue = l.getClickValue();
         if (el.clickValueDisplay) el.clickValueDisplay.innerText = `+${this.formatMoney(clickValue)}`;
         if (el.efficiencyDisplay) el.efficiencyDisplay.innerText = `Efficiency: Lvl ${Math.round(clickValue / l.getPrestigeMultiplier())}`;
-
-        if (el.buyCasinoBtn) el.buyCasinoBtn.disabled = window.state.balance < 10000;
-
-        const slotsBet = parseInt(el.slotsBetInput?.value) || 10;
-        const rouletteBet = parseInt(el.rouletteBetInput?.value) || 10;
-        const blackjackBet = parseInt(el.bjBetInput?.value) || 10;
-        const { slots, roulette } = l.spinning;
-
-        if (el.spinSlotsBtn) el.spinSlotsBtn.disabled = slots || window.state.balance < slotsBet || slotsBet < 10;
-        [el.btnBetRed, el.btnBetBlack, el.btnBetGreen].forEach(button => {
-            if (button) button.disabled = roulette || window.state.balance < rouletteBet || rouletteBet < 10;
-        });
-        if (el.slotsBetInput) el.slotsBetInput.disabled = slots;
-        if (el.rouletteBetInput) el.rouletteBetInput.disabled = roulette;
-        el.betChips?.forEach(row => {
-            const locked = (row.dataset.chipsFor === 'slotsBetInput' && slots) ||
-                (row.dataset.chipsFor === 'rouletteBetInput' && roulette);
-            Array.from(row.children).forEach(chip => { chip.disabled = locked; });
-        });
-
-        const handActive = Boolean(window.state.blackjack && window.state.blackjack.active);
-        if (el.btnBjDeal && !handActive) el.btnBjDeal.disabled = window.state.balance < blackjackBet || blackjackBet < 10;
-        if (el.btnBjHit) el.btnBjHit.disabled = !handActive;
-        if (el.btnBjStand) el.btnBjStand.disabled = !handActive;
-        if (el.btnBjDouble) el.btnBjDouble.disabled = !l.canDouble();
 
         this.updateDealerBadge();
     },

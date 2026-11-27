@@ -38,23 +38,6 @@ test('prestige unlocks at $1M and shows the next bonus', () => {
     assert.match(el.prestigeInfo.innerText, /\+30%/);
 });
 
-test('prestige also clears a Blackjack hand in progress', () => {
-    const game = createGame();
-    Object.assign(game.window.state, {
-        lifetimeEarnings: 1000000,
-        balance: 5000,
-        blackjack: { active: true, playerHand: [{ value: '10' }], dealerHand: [{ value: '9' }], status: 'Playing', bet: 1000000 },
-        rouletteHistory: ['Red']
-    });
-    game.window.logic.prestige();
-    const saved = game.saved();
-    assert.strictEqual(saved.prestigeCount, 1);
-    assert.strictEqual(saved.balance, 0);
-    assert.strictEqual(saved.blackjack.active, false);
-    assert.strictEqual(saved.blackjack.playerHand.length, 0);
-    assert.strictEqual(saved.rouletteHistory.length, 0);
-});
-
 test('the click value stays tidy after prestiging', () => {
     const game = createGame({ files: FULL });
     game.window.state.prestigeCount = 2;
@@ -99,43 +82,6 @@ test('the balance colour flash does not stick', () => {
         .filter(animation => animation !== 'none'); // reduced-motion override
     assert.strictEqual(flashes.length, 2);
     flashes.forEach(animation => assert.ok(!animation.includes('forwards'), animation));
-});
-
-function midHand(answer) {
-    const game = createGame();
-    const asked = [];
-    game.window.confirm = msg => { asked.push(msg); return answer; };
-    game.window.state.blackjack = { active: true, playerHand: [{ value: '5' }], dealerHand: [{ value: '9' }], status: 'Playing', bet: 1000 };
-    game.window.logic.bjReset();
-    return { game, asked, hand: game.window.state.blackjack };
-}
-
-test('Reset Failsafe asks before giving up a live bet', () => {
-    const { asked, hand } = midHand(false);
-    assert.strictEqual(asked.length, 1);
-    assert.match(asked[0], /\$1,000/);
-    assert.strictEqual(hand.active, true);
-});
-
-test('Reset Failsafe resets once confirmed', () => {
-    assert.strictEqual(midHand(true).hand.active, false);
-});
-
-test('Reset Failsafe does not ask when no bet is at stake', () => {
-    const game = createGame();
-    let asked = 0;
-    game.window.confirm = () => { asked++; return false; };
-    game.window.logic.bjReset();
-    assert.strictEqual(asked, 0);
-    assert.strictEqual(game.window.state.blackjack.status, 'Ready to play');
-});
-
-test('roulette images are small enough for a phone', () => {
-    for (const colour of ['red', 'black', 'green']) {
-        const png = read(`Assets/roulette_${colour}.png`);
-        assert.ok(png.readUInt32BE(16) <= 256, `${colour} width ${png.readUInt32BE(16)}`);
-        assert.ok(png.length < 120 * 1024, `${colour} is ${Math.round(png.length / 1024)}KB`);
-    }
 });
 
 // Already fixed with the dealership upgrade; this keeps it that way

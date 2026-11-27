@@ -85,44 +85,6 @@ test('a full or blocked storage does not crash the game', () => {
     assert.doesNotThrow(() => game.window.saveGame());
 });
 
-test('slot winnings are not lost if the page reloads mid-spin', () => {
-    const first = createGame();
-    first.window.state.balance = 100;
-    first.run('Math.random = () => 0.99'); // three sevens
-    first.window.logic.spinSlots(100);
-    first.window.saveGame();
-
-    const second = createGame({ storage: first.storage });
-    second.window.loadGame();
-    assert.strictEqual(second.window.state.balance, 3000);
-    assert.strictEqual(second.window.state.casinoProfitLoss, 2900);
-});
-
-test('roulette winnings are not lost if the page reloads mid-spin', () => {
-    const first = createGame();
-    first.window.state.balance = 500;
-    first.run('Math.random = () => 0'); // first pocket is red
-    first.window.logic.playRoulette('Red', 500);
-    first.window.saveGame();
-
-    const second = createGame({ storage: first.storage });
-    second.window.loadGame();
-    assert.strictEqual(second.window.state.balance, 1000);
-});
-
-test('winnings are paid only once when the spin finishes normally', () => {
-    const first = createGame();
-    first.window.state.balance = 100;
-    first.run('Math.random = () => 0.99');
-    first.window.logic.spinSlots(100);
-    first.flushTimeouts();
-    first.window.saveGame();
-
-    const second = createGame({ storage: first.storage });
-    second.window.loadGame();
-    assert.strictEqual(second.window.state.balance, 3000);
-});
-
 test('the save indicator writes its text into the label', () => {
     const game = createGame({ files: ['state.js', 'logic.js', 'ui.js'] });
     const label = fakeElement();
