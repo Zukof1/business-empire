@@ -21,6 +21,36 @@ const TAXI_MAX_SPACES = 6;
 const TAXI_SPACE_COST = 25000;
 const DISPATCHER_COST = 25000;
 
+const RENTAL_OPEN_COST = 150000;
+const HOME_TYPES = [
+    // repair is the price of fixing a completely wrecked home
+    { id: 'studio', name: 'Studio flat', short: 'Studio', price: 40000, rent: 60, repair: 4000, repairs: 'Cheap' },
+    { id: 'house', name: 'Family house', short: 'House', price: 150000, rent: 250, repair: 22500, repairs: 'Medium' },
+    { id: 'villa', name: 'Villa', short: 'Villa', price: 600000, rent: 1100, repair: 120000, repairs: 'Costly' }
+];
+// wear is condition points a minute; a tenant who stays twice as long has stay 2
+const TENANT_TYPES = [
+    { id: 'careful', label: 'Careful', pay: 0.85, wear: 2, stay: 2, lateChance: 0, note: 'Half the wear, stays twice as long' },
+    { id: 'average', label: 'Average', pay: 1, wear: 4, stay: 1, lateChance: 0, note: 'No surprises' },
+    { id: 'late', label: 'Rich but late', pay: 1.3, wear: 4, stay: 1, lateChance: 0.2, note: 'Pays nothing 1 minute in 5' },
+    { id: 'rough', label: 'Rough', pay: 1.4, wear: 10, stay: 1, lateChance: 0, note: 'Wears the home fast' }
+];
+const RENT_LEVELS = [
+    { id: 'low', label: 'Low', pay: 0.8, leaveChance: 0.03, waitMs: 30000 },
+    { id: 'fair', label: 'Fair', pay: 1, leaveChance: 0.08, waitMs: 60000 },
+    { id: 'high', label: 'High', pay: 1.25, leaveChance: 0.20, waitMs: 90000 }
+];
+const TENANT_NAMES = ['Alex', 'Sam', 'Jordan', 'Priya', 'Maria', 'Chen', 'Omar', 'Lucy', 'Diego', 'Aisha', 'Noah', 'Yuki'];
+const APPLICANT_COUNT = 3;
+const MAX_HOMES = 4;
+const AGENT_COST = 100000;
+const HOME_SELL_FEE = 0.10;
+const RENT_LOST_PER_DAMAGE = 0.005; // for each point of condition below 100
+const HOME_MARKET_MS = 60000;
+const HOME_MARKET_STEP = 5;
+const HOME_MARKET_MIN = 80;
+const HOME_MARKET_MAX = 125;
+
 const RESTORE_TIME_MS = 30000;
 const REPAIR_TIME_EXTENSION_MS = 15000;
 const LICENSE_COST = 2500;
@@ -287,7 +317,7 @@ const logic = {
             income += window.state.retailStores * retailData.income;
         }
 
-        return income * this.getPrestigeMultiplier() + this.getTaxiRate();
+        return income * this.getPrestigeMultiplier() + this.getTaxiRate() + this.getRentRate();
     },
 
     processBusinessIncome(now = Date.now()) {
@@ -317,6 +347,12 @@ const logic = {
                 longestGap = Math.max(longestGap, gap);
             }
         });
+
+        // Rent follows the same clock, so one welcome back total covers everything
+        const rent = this.settleRent(now);
+        managedEarned += rent.managed;
+        awayEarned += rent.away;
+        longestGap = Math.max(longestGap, rent.gap);
 
         // Added quietly: this runs every frame, so no glow or log
         if (managedEarned > 0) {
@@ -368,6 +404,7 @@ const logic = {
 
     collectAllIncome() {
         this.collectFares();
+        this.collectRent();
         if (!Array.isArray(window.state.businesses)) return;
         let totalCollected = 0;
         window.state.businesses.forEach(b => {
@@ -539,7 +576,7 @@ const logic = {
         if (this.getPrestigeRemaining() > 0) return;
         this.ask({
             title: 'Prestige?',
-            message: 'You lose your money, businesses, managers, taxis, stocks, cars, dealer license and casino pass. '
+            message: 'You lose your money, businesses, managers, taxis, rental homes, stocks, cars, dealer license and casino pass. '
                 + 'Your Lifestyle collection stays, and you get an extra permanent +10% income bonus.',
             yes: 'Prestige',
             danger: true
@@ -563,6 +600,7 @@ const logic = {
             window.state.away = null;
             window.state.managers = {};
             window.state.taxi = null;
+            window.state.rentals = null;
             window.state.auctionCars = [];
             window.state.nextAuctionAt = 0;
             window.state.garageSlots = 1;
@@ -1329,6 +1367,286 @@ const logic = {
         }
     },
 
+    // ---- Rental Properties ----
+
+    getHomeType(id) {
+        return HOME_TYPES.find(t => t.id === id);
+    },
+
+    getHome(id) {
+        return window.state.rentals?.homes.find(h => h.id === id);
+    },
+
+    getTenantType(id) {
+        return TENANT_TYPES.find(t => t.id === id);
+    },
+
+    getRentLevel(id) {
+        return RENT_LEVELS.find(level => level.id === id);
+    },
+
+    getRentalOpenCost() {
+        return RENTAL_OPEN_COST;
+    },
+
+    getAgentCost() {
+        return AGENT_COST;
+    },
+
+    getMaxHomes() {
+        return MAX_HOMES;
+    },
+
+    openRentals() {
+        if (window.state.rentals || !this.spend(RENTAL_OPEN_COST)) return;
+        const everyType = value => Object.fromEntries(HOME_TYPES.map(t => [t.id, value]));
+        window.state.rentals = {
+            rent: 0, agent: false, homes: [], nextId: 1, lastPayout: Date.now(),
+            market: everyType(100), change: everyType(0), marketMs: 0
+        };
+        this.logEvent('Opened Rental Properties', "text-amber-400");
+        this.refreshBusinessScreen();
+    },
+
+    // What a home of this type sells for today
+    getHomePrice(typeId) {
+        const percent = window.state.rentals?.market[typeId] ?? 100;
+        return Math.round(this.getHomeType(typeId).price * percent / 100);
+    },
+
+    buyHome(typeId) {
+        const rentals = window.state.rentals;
+        if (!rentals || !this.getHomeType(typeId) || rentals.homes.length >= MAX_HOMES) return;
+        if (!this.spend(this.getHomePrice(typeId))) return;
+
+        rentals.homes.push({
+            id: rentals.nextId++, type: typeId, condition: 100, rentLevel: 'fair',
+            tenant: null, late: false, minuteMs: 0, applicants: this.makeApplicants(), waitUntil: null
+        });
+        this.logEvent(`Bought a ${this.getHomeType(typeId).name}`, "text-amber-400");
+        this.refreshBusinessScreen();
+    },
+
+    // Different people of different types
+    makeApplicants() {
+        const types = TENANT_TYPES.map(t => t.id);
+        while (types.length > APPLICANT_COUNT) types.splice(Math.floor(Math.random() * types.length), 1);
+        const names = [...TENANT_NAMES];
+        return types.map(type => ({ name: names.splice(Math.floor(Math.random() * names.length), 1)[0], type }));
+    },
+
+    chooseTenant(homeId, index) {
+        const home = this.getHome(homeId);
+        const applicant = home?.applicants?.[index];
+        if (!applicant || home.tenant) return;
+
+        home.tenant = { name: applicant.name, type: applicant.type };
+        home.applicants = null;
+        home.minuteMs = 0;
+        home.late = Math.random() < this.getTenantType(applicant.type).lateChance;
+        this.logEvent(`${applicant.name} moved into your ${this.getHomeType(home.type).name}`, "text-emerald-400");
+        if (window.ui?.businessScreen === 'tenants') window.ui.showBusiness('rentals');
+        else this.refreshBusinessScreen();
+    },
+
+    setRentLevel(homeId, levelId) {
+        const home = this.getHome(homeId);
+        if (!home || !this.getRentLevel(levelId)) return;
+        home.rentLevel = levelId;
+        this.refreshBusinessScreen();
+    },
+
+    // Each point of damage takes a little off the rent
+    getConditionFactor(home) {
+        return 1 - (100 - home.condition) * RENT_LOST_PER_DAMAGE;
+    },
+
+    // Rent a second from this kind of tenant, when they are paying
+    getRentFor(home, tenantTypeId, levelPay = this.getRentLevel(home.rentLevel).pay) {
+        return this.getHomeType(home.type).rent * this.getTenantType(tenantTypeId).pay * levelPay
+            * this.getConditionFactor(home) * this.getPrestigeMultiplier();
+    },
+
+    getHomeRate(home) {
+        if (!home.tenant || home.late) return 0;
+        return this.getRentFor(home, home.tenant.type);
+    },
+
+    getRentRate() {
+        return (window.state.rentals?.homes || []).reduce((sum, home) => sum + this.getHomeRate(home), 0);
+    },
+
+    // While away, High counts as Fair and late payers pay their average
+    getAwayRentRate() {
+        return (window.state.rentals?.homes || []).filter(home => home.tenant).reduce((sum, home) => {
+            const levelPay = Math.min(this.getRentLevel(home.rentLevel).pay, this.getRentLevel('fair').pay);
+            const paid = 1 - this.getTenantType(home.tenant.type).lateChance;
+            return sum + this.getRentFor(home, home.tenant.type, levelPay) * paid;
+        }, 0);
+    },
+
+    // Rent by the wall clock, like shop income. Returns what the caller still has to hand over.
+    settleRent(now) {
+        const result = { managed: 0, away: 0, gap: 0 };
+        const rentals = window.state.rentals;
+        if (!rentals) return result;
+
+        const gap = now - rentals.lastPayout;
+        rentals.lastPayout = now;
+        if (!(gap > 0)) return result;
+
+        if (gap <= AWAY_GRACE_MS) {
+            const earned = this.getRentRate() * gap / 1000;
+            if (rentals.agent) result.managed = earned;
+            else rentals.rent += earned;
+        } else {
+            const reducedMs = Math.min(gap, AWAY_CAP_MS) - AWAY_GRACE_MS;
+            result.away = this.getAwayRentRate() * (AWAY_GRACE_MS + reducedMs * AWAY_RATE) / 1000;
+            if (result.away > 0) result.gap = gap;
+        }
+        return result;
+    },
+
+    // Prices, wear and tenants. Runs with the capped frame time, so time away never counts.
+    processRentals(ms, now = Date.now()) {
+        const rentals = window.state.rentals;
+        if (!rentals || !(ms > 0)) return;
+        let changed = false;
+
+        rentals.marketMs += ms;
+        if (rentals.marketMs >= HOME_MARKET_MS) {
+            rentals.marketMs -= HOME_MARKET_MS;
+            this.updateHomeMarket();
+            changed = true;
+        }
+
+        rentals.homes.forEach(home => {
+            if (home.tenant) {
+                if (this.processTenant(home, ms, now)) changed = true;
+            } else if (!home.applicants && !this.getApplicantWait(home, now)) {
+                home.applicants = this.makeApplicants();
+                home.waitUntil = null;
+                changed = true;
+            }
+        });
+
+        if (changed) window.ui?.renderBusinesses();
+    },
+
+    // Returns true when the screen needs redrawing
+    processTenant(home, ms, now) {
+        const tenant = this.getTenantType(home.tenant.type);
+        const level = this.getRentLevel(home.rentLevel);
+        let changed = false;
+
+        home.condition = Math.max(0, home.condition - tenant.wear * ms / 60000);
+        home.minuteMs += ms;
+        if (home.minuteMs >= 60000) {
+            home.minuteMs -= 60000;
+            const late = Math.random() < tenant.lateChance;
+            changed = late !== home.late;
+            home.late = late;
+        }
+
+        // The odds are given per minute, whatever the frame length
+        const chance = level.leaveChance / tenant.stay;
+        if (Math.random() < 1 - Math.pow(1 - chance, ms / 60000)) {
+            const message = `${home.tenant.name} left your ${this.getHomeType(home.type).name}`;
+            home.tenant = null;
+            home.late = false;
+            home.waitUntil = now + level.waitMs;
+            this.logEvent(message, "text-red-400");
+            window.ui?.showToast(message);
+            changed = true;
+        }
+        return changed;
+    },
+
+    updateHomeMarket() {
+        const rentals = window.state.rentals;
+        HOME_TYPES.forEach(({ id }) => {
+            const step = Math.floor(Math.random() * (HOME_MARKET_STEP * 2 + 1)) - HOME_MARKET_STEP;
+            const before = rentals.market[id];
+            rentals.market[id] = Math.min(HOME_MARKET_MAX, Math.max(HOME_MARKET_MIN, before + step));
+            rentals.change[id] = rentals.market[id] - before;
+        });
+    },
+
+    // Milliseconds until an empty home has applicants again
+    getApplicantWait(home, now = Date.now()) {
+        const longest = Math.max(...RENT_LEVELS.map(level => level.waitMs));
+        return this.getWaitLeft(home.waitUntil, longest, now);
+    },
+
+    collectRent() {
+        const rentals = window.state.rentals;
+        if (!rentals || !(rentals.rent > 0)) return;
+        const amount = rentals.rent;
+        rentals.rent = 0;
+        this.addMoney(amount);
+        this.logEvent(`Collected ${this.money(amount)} in rent`, "text-emerald-400");
+        if (window.ui) {
+            window.ui.triggerBalancePulse('green');
+            window.ui.updateUI();
+        }
+    },
+
+    hireAgent() {
+        const rentals = window.state.rentals;
+        if (!rentals || rentals.agent || !this.spend(AGENT_COST)) return;
+        rentals.agent = true;
+        this.logEvent('Hired a property agent', "text-amber-400");
+        this.collectRent();
+        this.refreshBusinessScreen();
+    },
+
+    // The whole points shown on screen, so a fresh repair does not read 99% a moment later
+    getConditionPercent(home) {
+        return Math.ceil(home.condition);
+    },
+
+    getHomeRepairCost(home) {
+        return Math.round(this.getHomeType(home.type).repair * (100 - this.getConditionPercent(home)) / 100);
+    },
+
+    repairHome(id) {
+        const home = this.getHome(id);
+        if (!home) return;
+        const cost = this.getHomeRepairCost(home);
+        if (!cost || !this.spend(cost)) return;
+        home.condition = 100;
+        this.logEvent(`Repaired your ${this.getHomeType(home.type).name}`, "text-emerald-400");
+        this.refreshBusinessScreen();
+    },
+
+    // Today's price, less the agent's fee and the repairs the buyer will need
+    getHomeSellValue(home) {
+        return Math.round(this.getHomePrice(home.type) * (1 - HOME_SELL_FEE)) - this.getHomeRepairCost(home);
+    },
+
+    sellHome(id) {
+        const home = this.getHome(id);
+        if (!home) return;
+        const { name } = this.getHomeType(home.type);
+        const leaving = home.tenant ? ' Your tenant will leave.' : '';
+        this.ask({
+            title: 'Sell this home?',
+            message: `Sell your ${name} for about $${this.getHomeSellValue(home).toLocaleString('en-US')}?${leaving}`,
+            yes: 'Sell'
+        }, () => {
+            // Prices and condition keep moving while the question is open
+            const current = this.getHome(id);
+            if (!current) return;
+
+            const value = this.getHomeSellValue(current);
+            window.state.rentals.homes = window.state.rentals.homes.filter(h => h.id !== id);
+            // Not counted as earnings, so buying and selling cannot farm Prestige
+            window.state.balance += value;
+            this.logEvent(`Sold your ${name} for ${this.money(value)}`, "text-emerald-400");
+            this.refreshBusinessScreen();
+        });
+    },
+
     // ---- Lifestyle ----
 
     getLifestyleSpent() {
@@ -1425,6 +1743,7 @@ const logic = {
             // Accrue Passive Income internally
             this.processBusinessIncome();
             this.processTaxi(deltaTime);
+            this.processRentals(deltaTime);
 
             // Sync visual progress bars for businesses that produce income
             const incomePerSecond = this.getPassiveIncome();
@@ -1485,6 +1804,9 @@ window.BUSINESS_DATA = BUSINESS_DATA;
 window.MARKET_DATA = MARKET_DATA;
 window.CAR_TIERS = CAR_TIERS;
 window.TAXI_CARS = TAXI_CARS;
+window.HOME_TYPES = HOME_TYPES;
+window.TENANT_TYPES = TENANT_TYPES;
+window.RENT_LEVELS = RENT_LEVELS;
 window.LIFESTYLE_ITEMS = LIFESTYLE_ITEMS;
 window.stockPrices = stockPrices;
 window.stockHistory = stockHistory;

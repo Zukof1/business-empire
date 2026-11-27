@@ -10,13 +10,23 @@
     S.balance = 5000000;
     S.hasDealerLicense = true;
     S.hasCasinoMembership = true;
-    // A current player has at most the shop and the taxi company
+    // A current player has at most the shop, the taxi company and rental homes
     S.businesses = [];
     L.buyBusiness('retail');
     S.taxi = { fares: 123456.7, spaces: 3, dispatcher: false, nextId: 3, cars: [
         { id: 1, type: 'luxury', km: 140000, broken: false },
         { id: 2, type: 'hatchback', km: 62000, broken: true }
     ] };
+    const home = (id, type, extra) => ({ id, type, condition: 64, rentLevel: 'fair', tenant: null, late: false,
+        minuteMs: 0, applicants: null, waitUntil: null, ...extra });
+    const applicants = [{ name: 'Jordan', type: 'careful' }, { name: 'Sam', type: 'late' }, { name: 'Alex', type: 'rough' }];
+    S.rentals = { rent: 123456789, agent: false, nextId: 5, lastPayout: Date.now(), marketMs: 0,
+        market: { studio: 125, house: 100, villa: 80 }, change: { studio: 5, house: 0, villa: -5 }, homes: [
+            home(1, 'villa', { tenant: { name: 'Priya', type: 'rough' } }),
+            home(2, 'house', { tenant: { name: 'Maria', type: 'late' }, late: true }),
+            home(3, 'studio', { applicants }),
+            home(4, 'villa', { waitUntil: Date.now() + 60000 })
+        ] };
     S.blackjack = { active: false, playerHand: [], dealerHand: [], status: '', bet: 0 };
     S.away = null;
     S.managers = {};
@@ -68,12 +78,15 @@
     checkScreen('welcome back', document.getElementById('awayModal'), ['awayCollectBtn']);
     S.away = null; U.updateUI();
     checkScreen('vault', view('vault'), ['workBtn', 'startBusinessBtn']);
-    ['start', 'retail', 'taxi'].forEach(name => {
+    ['start', 'retail', 'taxi', 'rentals'].forEach(name => {
         U.showBusiness(name);
         checkScreen(`${name} business`, view('vault'));
         if (!document.getElementById('businessDetail').innerText.trim()) problems.push(`${name} business: nothing shown`);
     });
-    U.goBack();
+    U.showTenants(3);
+    checkScreen('tenants business', view('vault'));
+    if (!document.getElementById('businessDetail').innerText.includes('Choose Sam')) problems.push('tenants: no applicants shown');
+    U.goBack(); U.goBack();
     U.showBusiness('dealer'); checkScreen('dealership', view('vault'));
     if (!document.getElementById('marketContent').innerText.trim()) problems.push('dealership: nothing shown');
     U.goBack();

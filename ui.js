@@ -2,6 +2,12 @@ const BUSINESS_ICONS = { retail: 'store', startup: 'laptop', estate: 'building',
 const SLOT_ICONS = { '🎰': 'star', '💎': 'gem', '🍒': 'cherry' };
 const SCREEN_TITLES = { vault: 'Vault', lifestyle: 'Lifestyle', invest: 'Stocks', casino: 'Casino', profile: 'Your empire' };
 const GAME_TITLES = { slots: 'Slots', roulette: 'Roulette', blackjack: 'Blackjack' };
+// Borrowed from Lifestyle until the homes have their own photos
+const HOME_PHOTOS = {
+    studio: 'lifestyle-web/apartment',
+    house: 'lifestyle-web/beach-house',
+    villa: 'lifestyle-web/mansion'
+};
 const CAR_PHOTOS = {
     '2018 Sedan': 'sedan-2018',
     '2012 Hatchback': 'hatchback-2012',
@@ -16,6 +22,7 @@ const CAR_PHOTOS = {
 const ui = {
     elements: {},
     businessScreen: null, // which Vault screen is open; null is the dashboard
+    tenantHomeId: null, // the home whose applicants are on show
 
     init() {
         this.cacheElements();
@@ -210,8 +217,9 @@ const ui = {
         // The dot sits on the Vault button and covers every business that needs attention
         const cars = window.state.hasDealerLicense ? window.state.dealerCars || [] : [];
         const brokenTaxi = (window.state.taxi?.cars || []).some(c => c.broken);
+        const needsTenant = (window.state.rentals?.homes || []).some(h => h.applicants);
         let tone = null;
-        if (brokenTaxi || cars.some(c => c.status === 'needs_repair')) {
+        if (brokenTaxi || needsTenant || cars.some(c => c.status === 'needs_repair')) {
             tone = 'alert';
         } else if (cars.some(c => c.status === 'ready')) {
             tone = 'good';
@@ -757,7 +765,7 @@ const ui = {
 
     goBack() {
         if (window.state.activeTab === 'casino') this.showCasinoLobby();
-        else this.showBusiness(null);
+        else this.showBusiness(this.businessScreen === 'tenants' ? 'rentals' : null);
     },
 
     getBusinessTitle(screen) {
@@ -765,6 +773,8 @@ const ui = {
         if (screen === 'start') return 'Start a business';
         if (screen === 'taxi') return 'Taxi Company';
         if (screen === 'dealer') return 'Car Dealership';
+        if (screen === 'rentals') return 'Rentals'; // short enough for a small phone
+        if (screen === 'tenants') return 'Tenants';
         return window.BUSINESS_DATA.find(b => b.id === screen).name;
     },
 
@@ -811,6 +821,24 @@ const ui = {
             });
         }
 
+        const rentals = window.state.rentals;
+        if (rentals) {
+            const homes = rentals.homes.length;
+            const empty = rentals.homes.filter(h => !h.tenant).length;
+            let status = rentals.agent ? 'Agent collecting' : `${this.formatMoney(rentals.rent)} in rent`;
+            if (!homes && !(rentals.rent > 0)) status = 'Buy a home to start earning';
+            if (empty) status = `${this.plural(empty, 'home')} empty`;
+            summaries.push({
+                id: 'rentals',
+                name: 'Rental Properties',
+                icon: 'key',
+                count: this.plural(homes, 'home'),
+                rate: l.getRentRate(),
+                status,
+                alert: empty > 0
+            });
+        }
+
         if (window.state.hasDealerLicense) {
             const cars = window.state.dealerCars || [];
             const count = status => cars.filter(c => c.status === status).length;
@@ -854,6 +882,11 @@ const ui = {
     renderBusinesses() {
         const el = this.elements;
         if (!el.businessesList) return;
+        // The home may have been let or sold since its Tenants screen opened
+        if (this.businessScreen === 'tenants' && !window.logic.getHome(this.tenantHomeId)?.applicants) {
+            this.showBusiness('rentals');
+            return;
+        }
         const screen = this.businessScreen;
 
         const dealer = screen === 'dealer';
@@ -873,6 +906,8 @@ const ui = {
         if (!screen || !el.businessDetail) return;
         if (screen === 'start') el.businessDetail.innerHTML = this.renderStartScreen();
         else if (screen === 'taxi') el.businessDetail.innerHTML = this.renderTaxiScreen();
+        else if (screen === 'rentals') el.businessDetail.innerHTML = this.renderRentalScreen();
+        else if (screen === 'tenants') el.businessDetail.innerHTML = this.renderTenantScreen();
         else el.businessDetail.innerHTML = this.renderBusinessScreen(screen);
     },
 
@@ -894,6 +929,11 @@ const ui = {
         if (id === 'taxi') {
             window.logic.openTaxiCompany();
             if (window.state.taxi) this.showBusiness('taxi');
+            return;
+        }
+        if (id === 'rentals') {
+            window.logic.openRentals();
+            if (window.state.rentals) this.showBusiness('rentals');
             return;
         }
         const before = this.getOwned(id).length;
@@ -920,6 +960,10 @@ const ui = {
             ? button('startDealer', false, "window.ui.showBusiness('dealer')", 'Manage your dealership')
             : button('startDealer', window.state.balance < l.getLicenseCost(), "window.ui.startBusiness('dealer')", `Open for ${this.formatMoney(l.getLicenseCost())}`);
 
+        const rentalButton = window.state.rentals
+            ? button('startRentals', false, "window.ui.showBusiness('rentals')", 'Manage your homes')
+            : button('startRentals', window.state.balance < l.getRentalOpenCost(), "window.ui.startBusiness('rentals')", `Open for ${this.formatMoney(l.getRentalOpenCost())}`);
+
         return `
         <article class="card stack">
             <div class="row"><span class="tile">${this.icon('store')}</span>
@@ -940,7 +984,198 @@ const ui = {
                 <div class="grow"><h3>Taxi Company</h3><span class="muted">${window.state.taxi ? 'Open' : 'Hands-on, with bigger earnings'}</span></div></div>
             <p>Buy cars and keep them running. They wear out, break down and need replacing.</p>
             ${taxiButton}
+        </article>
+        <article class="card stack">
+            <img class="car-photo" src="${this.getHomePhoto({ id: 'studio' })}" alt="A city flat" width="640" height="429">
+            <div class="row"><span class="tile">${this.icon('key')}</span>
+                <div class="grow"><h3>Rental Properties</h3><span class="muted">${window.state.rentals ? 'Open' : 'Homes that pay you rent'}</span></div></div>
+            <p>Buy homes, pick tenants, keep them in good shape and sell when prices are up.</p>
+            ${rentalButton}
         </article>`;
+    },
+
+    plural(count, noun) {
+        return `${count} ${noun}${count === 1 ? '' : 's'}`;
+    },
+
+    // ---- Rental Properties ----
+
+    showTenants(homeId) {
+        this.tenantHomeId = homeId;
+        this.showBusiness('tenants');
+    },
+
+    getHomePhoto(type) {
+        return `Assets/${HOME_PHOTOS[type.id]}.jpg`;
+    },
+
+    renderHomePhoto(type) {
+        return `<img class="car-photo" src="${this.getHomePhoto(type)}" alt="${type.name}" width="640" height="429">`;
+    },
+
+    renderCondition(home) {
+        const percent = window.logic.getConditionPercent(home);
+        return `<p class="row between"><span class="muted">Condition</span><strong id="homeCondition-${home.id}">${percent}%</strong></p>
+            <div class="meter wear ${percent < 40 ? 'worn' : ''}"><div id="homeBar-${home.id}" style="width: ${percent}%"></div></div>`;
+    },
+
+    renderRentPick(home) {
+        const buttons = window.RENT_LEVELS.map(level => {
+            const chosen = home.rentLevel === level.id;
+            return `<button class="btn ${chosen ? 'btn-yellow' : ''}" aria-pressed="${chosen}"
+                onclick="window.logic.setRentLevel(${home.id}, '${level.id}')">${level.label}</button>`;
+        }).join('');
+        return `<div><span class="muted">Rent</span><div class="trio">${buttons}</div></div>`;
+    },
+
+    getHomeFigure(home) {
+        return `+${this.formatMoney(window.logic.getHomeRate(home))}<small>/s</small>`;
+    },
+
+    getRepairLabel(home) {
+        return `Repair for ${this.formatMoney(window.logic.getHomeRepairCost(home))}`;
+    },
+
+    getSellLabel(home) {
+        return `Sell for ${this.formatMoney(window.logic.getHomeSellValue(home))}`;
+    },
+
+    getApplicantLabel(home) {
+        return `New applicants in ${Math.ceil(window.logic.getApplicantWait(home) / 1000)}s`;
+    },
+
+    getPriceTimerLabel() {
+        const seconds = Math.ceil((60000 - window.state.rentals.marketMs) / 1000);
+        return `New prices in ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+    },
+
+    renderHome(home) {
+        const l = window.logic;
+        const type = l.getHomeType(home.type);
+        const tenant = home.tenant && l.getTenantType(home.tenant.type);
+        const repairCost = l.getHomeRepairCost(home);
+
+        let earning = '<strong class="text-red-400">Earns nothing</strong>';
+        if (tenant) {
+            earning = home.late
+                ? '<strong class="text-amber-400">Rent late this minute</strong>'
+                : `<span id="homeRate-${home.id}" class="figure">${this.getHomeFigure(home)}</span>`;
+        }
+        let vacancy = '';
+        if (!tenant) {
+            vacancy = home.applicants
+                ? `<button class="btn btn-yellow btn-big wide" onclick="window.ui.showTenants(${home.id})">Choose a tenant</button>`
+                : `<button id="applicantWait-${home.id}" class="btn wide" disabled>${this.getApplicantLabel(home)}</button>`;
+        }
+
+        return `
+        <article class="card car">
+            ${this.renderHomePhoto(type)}
+            <div class="row">
+                <div class="grow"><h3>${type.name}</h3><span class="tag">${tenant ? 'Rented' : 'Empty'}</span></div>
+                ${earning}
+            </div>
+            ${tenant ? `<p class="row between"><span class="muted">Tenant</span><strong>${home.tenant.name} · ${tenant.label}</strong></p>` : ''}
+            ${this.renderCondition(home)}
+            ${tenant ? this.renderRentPick(home) : ''}
+            ${vacancy}
+            <button id="repairHome-${home.id}" class="btn btn-green wide ${repairCost ? '' : 'hidden'}" onclick="window.logic.repairHome(${home.id})"
+                ${window.state.balance < repairCost ? 'disabled' : ''}>${this.getRepairLabel(home)}</button>
+            <button id="sellHome-${home.id}" class="btn wide" onclick="window.logic.sellHome(${home.id})">${this.getSellLabel(home)}</button>
+        </article>`;
+    },
+
+    renderHomeMarket() {
+        const rentals = window.state.rentals;
+        return window.HOME_TYPES.map(type => {
+            const change = rentals.change[type.id];
+            let move = '<small>Steady</small>';
+            if (change > 0) move = `<small class="text-emerald-400">Up ${change}</small>`;
+            if (change < 0) move = `<small class="text-red-400">Down ${-change}</small>`;
+            return `<div class="card demand">
+                <span class="muted">${type.short}</span>
+                <strong>${rentals.market[type.id]}%</strong>
+                ${move}
+            </div>`;
+        }).join('');
+    },
+
+    renderRentalScreen() {
+        const l = window.logic;
+        const rentals = window.state.rentals;
+        if (!rentals) return this.renderStartScreen();
+        const full = rentals.homes.length >= l.getMaxHomes();
+
+        const rent = rentals.agent
+            ? '<div class="card"><p class="muted">Your agent collects rent for you</p></div>'
+            : `<div class="card row between">
+                    <div><span class="muted">Rent ready</span><strong id="rentPot" class="stat-figure text-emerald-400">${this.formatMoney(rentals.rent)}</strong></div>
+                    <button id="btnCollectRent" class="btn btn-yellow" onclick="window.logic.collectRent()" ${rentals.rent > 0 ? '' : 'disabled'}>Collect</button>
+                </div>
+                <div class="card row">
+                    <span class="tile">${this.icon('user')}</span>
+                    <div class="grow"><h3>Hire an agent</h3><span class="muted">Collects rent for you</span></div>
+                    <button id="btnAgent" class="btn btn-yellow" onclick="window.logic.hireAgent()"
+                        ${window.state.balance < l.getAgentCost() ? 'disabled' : ''}>${this.formatMoney(l.getAgentCost())}</button>
+                </div>`;
+
+        const homes = rentals.homes.length
+            ? rentals.homes.map(home => this.renderHome(home)).join('')
+            : `<div class="empty">${this.icon('key')}<strong>No homes yet</strong><span>Buy one below to start earning</span></div>`;
+
+        const forSale = window.HOME_TYPES.map(type => {
+            const price = l.getHomePrice(type.id);
+            return `
+            <article class="card car">
+                ${this.renderHomePhoto(type)}
+                <div class="row">
+                    <div class="grow"><h3>${type.name}</h3></div>
+                    <span class="figure">+${this.formatMoney(type.rent * l.getPrestigeMultiplier())}<small>/s</small></span>
+                </div>
+                <p class="row between"><span class="muted">Repairs</span><strong>${type.repairs}</strong></p>
+                <button id="buyHome-${type.id}" class="btn btn-yellow btn-big wide" onclick="window.logic.buyHome('${type.id}')"
+                    ${full || window.state.balance < price ? 'disabled' : ''}>${full ? 'No room' : `Buy for ${this.formatMoney(price)}`}</button>
+            </article>`;
+        }).join('');
+
+        return `
+            ${rent}
+            <div class="section-head">
+                <h2>Your homes</h2>
+                <span class="pill">${rentals.homes.length}/${l.getMaxHomes()} Homes</span>
+            </div>
+            ${homes}
+            <div class="section-head">
+                <h2>Home prices</h2>
+                <span id="homePriceTimer" class="note">${this.getPriceTimerLabel()}</span>
+            </div>
+            <div class="trio">${this.renderHomeMarket()}</div>
+            <div class="section-head"><h2>Buy a home</h2></div>
+            ${forSale}`;
+    },
+
+    renderTenantScreen() {
+        const l = window.logic;
+        const home = l.getHome(this.tenantHomeId);
+        const applicants = home.applicants.map((applicant, i) => {
+            const type = l.getTenantType(applicant.type);
+            return `
+            <article class="card stack">
+                <div class="row"><span class="tile">${this.icon('user')}</span>
+                    <div class="grow"><h3>${applicant.name}</h3><span class="tag">${type.label}</span></div>
+                    <span class="figure">+${this.formatMoney(l.getRentFor(home, type.id))}<small>/s</small></span></div>
+                <p>${type.note}</p>
+                <button class="btn btn-yellow wide" onclick="window.logic.chooseTenant(${home.id}, ${i})">Choose ${applicant.name}</button>
+            </article>`;
+        }).join('');
+
+        return `
+            <div class="card stack">
+                <h3>${l.getHomeType(home.type).name}</h3>
+                ${this.renderCondition(home)}
+                ${this.renderRentPick(home)}
+            </div>
+            ${applicants}`;
     },
 
     formatKm(km) {
@@ -1044,6 +1279,11 @@ const ui = {
             return;
         }
 
+        if (this.businessScreen === 'rentals') {
+            this.syncRentalScreen(setText, setDisabled);
+            return;
+        }
+
         const taxi = window.state.taxi;
         if (this.businessScreen !== 'taxi' || !taxi) return;
         setText('taxiFares', this.formatMoney(taxi.fares));
@@ -1061,6 +1301,39 @@ const ui = {
             }
             setDisabled(`repairTaxi-${car.id}`, balance < l.getTaxiRepairCost(car));
             setText(`sellTaxi-${car.id}`, `Sell for ${this.formatMoney(l.getTaxiSellValue(car))}`);
+        });
+    },
+
+    syncRentalScreen(setText, setDisabled) {
+        const l = window.logic;
+        const rentals = window.state.rentals;
+        if (!rentals) return;
+        const byId = id => document.getElementById(id);
+        const balance = window.state.balance;
+
+        setText('rentPot', this.formatMoney(rentals.rent));
+        setDisabled('btnCollectRent', !(rentals.rent > 0));
+        setDisabled('btnAgent', balance < l.getAgentCost());
+        setText('homePriceTimer', this.getPriceTimerLabel());
+        const full = rentals.homes.length >= l.getMaxHomes();
+        window.HOME_TYPES.forEach(type => setDisabled(`buyHome-${type.id}`, full || balance < l.getHomePrice(type.id)));
+
+        rentals.homes.forEach(home => {
+            const percent = l.getConditionPercent(home);
+            setText(`homeCondition-${home.id}`, `${percent}%`);
+            const bar = byId(`homeBar-${home.id}`);
+            if (bar) {
+                bar.style.width = `${percent}%`;
+                bar.parentElement?.classList[percent < 40 ? 'add' : 'remove']('worn');
+            }
+            const rate = byId(`homeRate-${home.id}`);
+            if (rate) rate.innerHTML = this.getHomeFigure(home);
+            const cost = l.getHomeRepairCost(home);
+            byId(`repairHome-${home.id}`)?.classList[cost ? 'remove' : 'add']('hidden');
+            setText(`repairHome-${home.id}`, this.getRepairLabel(home));
+            setDisabled(`repairHome-${home.id}`, balance < cost);
+            setText(`sellHome-${home.id}`, this.getSellLabel(home));
+            setText(`applicantWait-${home.id}`, this.getApplicantLabel(home));
         });
     },
 
@@ -1206,6 +1479,7 @@ const ui = {
             markShort(byId('startRetail'), window.state.balance < l.getBusinessCost('retail') && this.getOwned('retail').length < 3);
             markShort(byId('startTaxi'), !window.state.taxi && window.state.balance < l.getTaxiOpenCost());
             markShort(byId('startDealer'), !window.state.hasDealerLicense && window.state.balance < l.getLicenseCost());
+            markShort(byId('startRentals'), !window.state.rentals && window.state.balance < l.getRentalOpenCost());
             this.syncBusinessScreen();
         }
 
