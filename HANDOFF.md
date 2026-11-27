@@ -8,9 +8,9 @@ Written 27 November 2026, at the end of a long session. Check anything important
 - **Repo:** `https://github.com/Zukof1/business-empire.git`, branch `main`.
 - **Live site:** `https://business-empire-ashy.vercel.app/`. Check that it shows the latest push (the script tags should read the current `?v=` number).
 - **Committed and pushed:** items 1 to 11 below and the tax switch on Stats, to `main`. The large photo originals were left out.
-- **Open bug:** on the owner's iPhone, restoring a backup code is refused. Cause unknown: the code starts `BE1:ey`, is long and has no `%`; random test games all produce accepted codes. The clearer messages are there to find out which check fails.
+- **Awaiting a phone check:** restoring on the owner's iPhone failed because it pasted `BE1:` as `be1:`. Both are accepted from `v=23`.
 - Do not commit or push unless the owner asks; suggesting a commit early is sensible.
-- **Tests:** `node --test tests/*.test.js` gave **189 passing** (Node 24).
+- **Tests:** `node --test tests/*.test.js` gave **190 passing** (Node 24).
 - **Not done:** nothing has been tried on a real phone, and pacing has not been played through.
 
 ## What was built
@@ -50,7 +50,7 @@ Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` an
 
 - `window.state` and the `state` variable in `state.js` must stay **the same object**. Load with `Object.assign`, never by replacing it.
 - Do not add script files without updating `buildBundle.js`, which lists them by name.
-- Bump the `?v=` number on the four script tags when scripts change (currently `v=22`).
+- Bump the `?v=` number on the four script tags when scripts change (currently `v=23`).
 - Ask before risky actions with `logic.ask({title, message, yes, danger}, action)`. Never call `confirm()` directly. Re-check conditions inside the action, because the game keeps running while the box is open.
 - Time rules: wall-clock timestamps for auctions, demand, shop earnings, rent and applicant waits; taxis, home wear, departures and home prices use the frame time, capped at 1 second, so they never run while the game is away.
 - Element ids are used by tests and by per-frame updates. Rename with care.

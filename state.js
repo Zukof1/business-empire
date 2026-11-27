@@ -162,7 +162,8 @@ function inspectBackupCode(text) {
     const code = String(text ?? '').replace(/\s+/g, ''); // notes apps like to add line breaks
     const length = `${code.length.toLocaleString('en-US')} characters`;
     if (!code) return refuse('Nothing was pasted.');
-    if (!code.startsWith(BACKUP_PREFIX)) {
+    // iPhone takes "BE1:" for the start of a link and can paste it as "be1:", so either case is fine
+    if (code.slice(0, BACKUP_PREFIX.length).toUpperCase() !== BACKUP_PREFIX) {
         return refuse(`It doesn't start with ${BACKUP_PREFIX} but with "${code.slice(0, 8)}".`);
     }
 

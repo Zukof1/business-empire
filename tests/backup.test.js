@@ -51,6 +51,17 @@ test('spaces and line breaks added by a notes app are ignored', () => {
     assert.strictEqual(game.window.readBackupCode(messy).balance, 214500);
 });
 
+// Seen on the owner's iPhone: "BE1:" looks like the start of a link, so the phone pastes it as "be1:"
+test('a code whose first letters the phone made lowercase still works', () => {
+    const game = played();
+    const code = game.window.makeBackupCode();
+    ['be1:', 'Be1:', 'bE1:'].forEach(start => {
+        const result = game.window.inspectBackupCode(start + code.slice(4));
+        assert.strictEqual(result.problem, null, `${start}: ${result.problem}`);
+        assert.strictEqual(result.save.balance, 214500);
+    });
+});
+
 test('anything that is not a whole backup code is refused', () => {
     const game = played();
     const code = game.window.makeBackupCode();
