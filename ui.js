@@ -478,12 +478,14 @@ const ui = {
 
     copyBackup() {
         const code = window.makeBackupCode();
+        // The length lets the player check that nothing was cut off on the way
+        const size = code.length.toLocaleString('en-US');
         const byHand = () => this.openBackup('copy', code);
         const clipboard = window.navigator?.clipboard;
         if (!clipboard) return Promise.resolve(byHand());
         // Called straight from the tap, as iPhone requires
         return clipboard.writeText(code).then(
-            () => this.showToast('Backup code copied. Paste it into Notes to keep it safe.', 'good'),
+            () => this.showToast(`Backup code copied (${size} characters). Paste it into Notes to keep it safe.`, 'good'),
             byHand
         );
     },
@@ -494,7 +496,7 @@ const ui = {
         const copying = mode === 'copy';
         el.backupTitle.innerText = copying ? 'Your backup code' : 'Restore your game';
         el.backupHint.innerText = copying
-            ? 'Select all of it, copy it, and keep it somewhere safe.'
+            ? `Select all ${code.length.toLocaleString('en-US')} characters, copy them, and keep them somewhere safe.`
             : 'Paste your backup code below.';
         el.backupCode.value = code;
         el.backupCode.readOnly = copying;
@@ -519,9 +521,9 @@ const ui = {
 
     submitBackup() {
         const el = this.elements;
-        const save = window.readBackupCode(el.backupCode.value);
+        const { save, problem } = window.inspectBackupCode(el.backupCode.value);
         if (!save) {
-            el.backupError.innerText = "That code doesn't look right. Copy the whole code and try again.";
+            el.backupError.innerText = `That code doesn't look right. ${problem}`;
             el.backupError.classList.remove('hidden');
             return;
         }

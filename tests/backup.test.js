@@ -71,6 +71,33 @@ test('a code carrying page markup is refused', () => {
     });
 });
 
+// ---- Saying what is wrong ----
+
+test('a refused code says what is wrong with it', () => {
+    const game = played();
+    const code = game.window.makeBackupCode();
+    const good = { balance: 5, businesses: [], logs: [], portfolio: {} };
+    const problem = text => game.window.inspectBackupCode(text).problem;
+
+    assert.strictEqual(problem(code), null);
+    assert.match(problem('  '), /Nothing was pasted/);
+    assert.match(problem('Backup ' + code), /doesn't start with BE1:.*Backup/);
+    assert.match(problem(code.slice(0, 2000) + '​' + code.slice(2000)), /U\+200B at position 2001 of /);
+    assert.ok(code.length > 2000, `${code.length}`); // long enough to be cut in these places
+    assert.match(problem(code.slice(0, 1500)), /cut off.*1,500 characters.*ending/);
+    assert.ok(problem(code.slice(0, 1500)).includes(code.slice(1494, 1500)));
+    assert.match(problem(encode({ ...good, balance: null })), /not a game save.*balance/);
+    assert.match(problem(encode({ ...good, logs: 3 })), /not a game save.*logs/);
+    assert.match(problem(encode({ ...good, dealerCars: [{ name: '<b>' }] })), /won't accept.*name/);
+});
+
+test('the length given in a problem matches the length given when copying', () => {
+    const game = played();
+    const code = game.window.makeBackupCode();
+    assert.match(game.window.inspectBackupCode(code.slice(0, -40)).problem,
+        new RegExp(`${(code.length - 40).toLocaleString('en-US')} characters`));
+});
+
 // ---- Restoring ----
 
 test('restoring replaces the game, and closing the page cannot undo it', () => {
@@ -164,6 +191,7 @@ test('Copy puts the code on the clipboard', async () => {
     await t.ui.copyBackup();
     assert.strictEqual(t.game.window.readBackupCode(copied).balance, 214500);
     assert.match(t.toasts[0], /copied/i);
+    assert.ok(t.toasts[0].includes(`${copied.length.toLocaleString('en-US')} characters`), t.toasts[0]);
     assert.ok(!t.open('backupModal'));
 });
 
@@ -175,6 +203,7 @@ test('if the phone will not copy, the code is shown to copy by hand', async () =
         assert.match(t.el.backupCode.value, /^BE1:/);
         assert.strictEqual(t.el.backupCode.readOnly, true);
         assert.ok(t.el.backupCode.selected);
+        assert.ok(t.el.backupHint.innerText.includes(`${t.el.backupCode.value.length.toLocaleString('en-US')} characters`));
         assert.ok(!t.open('backupNext'));
         assert.strictEqual(t.el.backupCancel.innerText, 'Done');
         assert.ok(t.el.backupCancel.classList.contains('span-all'), 'the lone button fills the row');
@@ -190,7 +219,7 @@ test('a bad code is explained and nothing is asked', () => {
     t.ui.submitBackup();
     assert.ok(t.open('backupModal'));
     assert.ok(t.open('backupError'));
-    assert.match(t.el.backupError.innerText, /doesn't look right/);
+    assert.match(t.el.backupError.innerText, /doesn't look right.*doesn't start with BE1:.*oops/);
     assert.ok(!t.open('confirmModal'));
 
     t.ui.openBackup('restore'); // opening again starts clean

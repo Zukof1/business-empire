@@ -152,32 +152,55 @@ const BACKUP_PREFIX = 'BE1:';
 
 function makeBackupCode() {
     // btoa only takes plain characters, so any others are written as JSON escapes
-    const json = snapshot().replace(/[\u007f-￿]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
+    const json = snapshot().replace(/[\u007f-\uffff]/g, c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
     return BACKUP_PREFIX + btoa(json);
 }
 
-// Returns the saved game inside a code, or null if it is not a whole, sensible code
-function readBackupCode(text) {
+// Takes a code apart. `problem` says in plain words why it was refused, or is null.
+function inspectBackupCode(text) {
+    const refuse = problem => ({ save: null, problem });
     const code = String(text ?? '').replace(/\s+/g, ''); // notes apps like to add line breaks
-    if (!code.startsWith(BACKUP_PREFIX)) return null;
+    const length = `${code.length.toLocaleString('en-US')} characters`;
+    if (!code) return refuse('Nothing was pasted.');
+    if (!code.startsWith(BACKUP_PREFIX)) {
+        return refuse(`It doesn't start with ${BACKUP_PREFIX} but with "${code.slice(0, 8)}".`);
+    }
+
+    const body = code.slice(BACKUP_PREFIX.length);
+    const stray = body.search(/[^A-Za-z0-9+/=]/);
+    if (stray >= 0) {
+        const number = body.charCodeAt(stray).toString(16).toUpperCase().padStart(4, '0');
+        const position = BACKUP_PREFIX.length + stray + 1;
+        return refuse(`It has a character that doesn't belong (U+${number} at position ${position} of ${code.length}).`);
+    }
 
     // Saved text is drawn on screen, and a code can come from someone else, so no markup
     const markup = /[<>"`]/;
-    let unsafe = false;
+    let unsafeKey = null;
     let save;
     try {
-        save = JSON.parse(atob(code.slice(BACKUP_PREFIX.length)), (key, value) => {
-            if (markup.test(key) || (typeof value === 'string' && markup.test(value))) unsafe = true;
+        save = JSON.parse(atob(body), (key, value) => {
+            if (markup.test(key) || (typeof value === 'string' && markup.test(value))) unsafeKey = key;
             return value;
         });
     } catch (e) {
-        return null;
+        return refuse(`It looks cut off or changed: ${length}, ending "${code.slice(-6)}".`);
     }
 
     const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
-    const sensible = isObject(save) && Number.isFinite(save.balance) && Array.isArray(save.businesses)
-        && Array.isArray(save.logs) && isObject(save.portfolio);
-    return sensible && !unsafe ? save : null;
+    if (!isObject(save)) return refuse('It reads fine but is not a game save.');
+    const wrong = Object.entries({
+        balance: Number.isFinite(save.balance), businesses: Array.isArray(save.businesses),
+        logs: Array.isArray(save.logs), portfolio: isObject(save.portfolio)
+    }).find(([, fine]) => !fine);
+    if (wrong) return refuse(`It reads fine but is not a game save (problem with ${wrong[0]}).`);
+    if (unsafeKey !== null) return refuse(`It contains text the game won't accept (in "${unsafeKey}").`);
+    return { save, problem: null };
+}
+
+// The saved game inside a code, or null if it is not a whole, sensible code
+function readBackupCode(text) {
+    return inspectBackupCode(text).save;
 }
 
 // Puts a saved game in place of this one and restarts. False if the phone could not store it.
@@ -202,6 +225,7 @@ window.state = state;
 window.saveGame = saveGame;
 window.makeBackupCode = makeBackupCode;
 window.readBackupCode = readBackupCode;
+window.inspectBackupCode = inspectBackupCode;
 window.restoreGame = restoreGame;
 window.startAutosave = startAutosave;
 window.loadGame = loadGame;
