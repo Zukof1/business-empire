@@ -1,0 +1,6 @@
+# Kept off the live site. The leading slash limits each line to the project's top folder.
+/HANDOFF.md
+/docs
+/tests
+/test_biz.js
+/test_biz2.js

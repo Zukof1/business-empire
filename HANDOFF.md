@@ -38,6 +38,7 @@ Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` an
 | `threeRender.js` | Gold particle background |
 | `tests/harness.js` | Loads the game scripts into a Node `vm` context with a small browser stand-in |
 | `tests/layout-check.js` | Browser layout check |
+| `.vercelignore` | Notes and tests kept off the live site |
 | `Assets/cars`, `Assets/lifestyle` | Large originals, **not loaded by the game** |
 | `Assets/cars-web`, `Assets/lifestyle-web` | Small copies the game loads |
 
