@@ -1,183 +1,148 @@
+const BUSINESS_ICONS = { retail: 'store', startup: 'laptop', estate: 'building', corp: 'globe' };
+const SLOT_ICONS = { '🎰': 'star', '💎': 'gem', '🍒': 'cherry' };
+const SCREEN_TITLES = { vault: 'Vault', lifestyle: 'Lifestyle', invest: 'Stocks', casino: 'Casino', profile: 'Your empire' };
+const GAME_TITLES = { slots: 'Slots', roulette: 'Roulette', blackjack: 'Blackjack' };
+const CAR_PHOTOS = {
+    '2018 Sedan': 'sedan-2018',
+    '2012 Hatchback': 'hatchback-2012',
+    '2005 Truck': 'truck-2005',
+    '2020 SUV': 'suv-2020',
+    '1994 Coupe': 'coupe-1994',
+    '2015 Sports Car': 'sports-2015',
+    '1967 Fastback': 'fastback-1967',
+    '1955 Roadster': 'roadster-1955'
+};
+
 const ui = {
     elements: {},
+    businessScreen: null, // which Vault screen is open; null is the dashboard
 
     init() {
         this.cacheElements();
         this.bindEvents();
         this.updateUI();
+        this.renderLogs();
         this.switchTab(window.state.activeTab);
     },
 
     cacheElements() {
-        this.elements = {
-            balanceDisplay: document.getElementById('balanceDisplay'),
-            passiveIncomeDisplay: document.getElementById('passiveIncomeDisplay'),
-            workBtn: document.getElementById('workBtn'),
-            clickValueDisplay: document.getElementById('clickValueDisplay'),
-            efficiencyDisplay: document.getElementById('efficiencyDisplay'),
-            businessesList: document.getElementById('businessesList'),
-            storeCountDisplay: document.getElementById('storeCountDisplay'),
-
-            saveIndicator: document.getElementById('saveIndicator'),
-            saveDot: document.getElementById('saveDot'),
-
-            navVault: document.getElementById('navVault'),
-            navMarket: document.getElementById('navMarket'),
-            navInvest: document.getElementById('navInvest'),
-
-            vaultView: document.getElementById('vaultView'),
-            marketView: document.getElementById('marketView'),
-            investView: document.getElementById('investView'),
-            prestigeContainer: document.getElementById('prestigeContainer'),
-
-            headerTitle: document.getElementById('headerTitle'),
-            dealerBadge: document.getElementById('dealerBadge'),
-            activityLogList: document.getElementById('activityLogList'),
-
-            navCasino: document.getElementById('navCasino'),
-            casinoBadge: document.getElementById('casinoBadge'),
-            casinoView: document.getElementById('casinoView'),
-            casinoGate: document.getElementById('casinoGate'),
-            casinoContent: document.getElementById('casinoContent'),
-            buyCasinoBtn: document.getElementById('buyCasinoBtn'),
-
-            slot1: document.getElementById('slot1'),
-            slot2: document.getElementById('slot2'),
-            slot3: document.getElementById('slot3'),
-            slotResult: document.getElementById('slotResult'),
-            spinSlotsBtn: document.getElementById('spinSlotsBtn'),
-            slotsBetInput: document.getElementById('slotsBetInput'),
-
-            rouletteResult: document.getElementById('rouletteResult'),
-            rouletteRail: document.getElementById('rouletteRail'),
-            rouletteHistory: document.getElementById('rouletteHistory'),
-            rouletteBetInput: document.getElementById('rouletteBetInput'),
-            btnBetRed: document.getElementById('btnBetRed'),
-            btnBetBlack: document.getElementById('btnBetBlack'),
-            btnBetGreen: document.getElementById('btnBetGreen'),
-
-            bjTable: document.getElementById('bjTable'),
-
-            casinoLobby: document.getElementById('casinoLobby'),
-            btnOpenSlots: document.getElementById('btnOpenSlots'),
-            btnOpenRoulette: document.getElementById('btnOpenRoulette'),
-            btnOpenBlackjack: document.getElementById('btnOpenBlackjack'),
-            casinoSlotsView: document.getElementById('casinoSlotsView'),
-            casinoRouletteView: document.getElementById('casinoRouletteView'),
-            casinoBlackjackView: document.getElementById('casinoBlackjackView'),
-            btnBackToLobby: document.querySelectorAll('.btnBackToLobby'), // Nodelist
-            bjDealerScore: document.getElementById('bjDealerScore'),
-            bjDealerHand: document.getElementById('bjDealerHand'),
-            bjPlayerScore: document.getElementById('bjPlayerScore'),
-            bjPlayerHand: document.getElementById('bjPlayerHand'),
-            bjResult: document.getElementById('bjResult'),
-            bjControlsDeal: document.getElementById('bjControlsDeal'),
-            bjControlsPlay: document.getElementById('bjControlsPlay'),
-            btnBjDeal: document.getElementById('btnBjDeal'),
-            btnBjHit: document.getElementById('btnBjHit'),
-            btnBjStand: document.getElementById('btnBjStand'),
-            bjBetInput: document.getElementById('bjBetInput'),
-
-            navProfile: document.getElementById('navProfile'),
-            profileView: document.getElementById('profileView'),
-            statRank: document.getElementById('statRank'),
-            statTotalEarnings: document.getElementById('statTotalEarnings'),
-            statTotalClicks: document.getElementById('statTotalClicks'),
-            statCasinoPL: document.getElementById('statCasinoPL'),
-
-            licenseGate: document.getElementById('licenseGate'),
-            marketContent: document.getElementById('marketContent'),
-            buyLicenseBtn: document.getElementById('buyLicenseBtn'),
-
-            browseAuctionsBtn: document.getElementById('browseAuctionsBtn'),
-            auctionResultsList: document.getElementById('auctionResultsList'),
-            auctionSection: document.getElementById('auctionSection'),
-
-            garageStatus: document.getElementById('garageStatus'),
-            buyGarageBtn: document.getElementById('buyGarageBtn'),
-            garageSlotsContainer: document.getElementById('garageSlotsContainer'),
-
-            stockListContainer: document.getElementById('stockListContainer'),
-            portfolioValueDisplay: document.getElementById('portfolioValueDisplay'),
-            toastContainer: document.getElementById('toastContainer')
-        };
+        const ids = [
+            'app', 'headerTitle', 'btnHeaderBack', 'balanceDisplay', 'passiveIncomeDisplay', 'activityLogList',
+            'saveIndicator', 'saveDot', 'saveLabel', 'toastContainer',
+            'awayModal', 'awayAmount', 'awayDuration', 'awayCollectBtn',
+            'confirmModal', 'confirmTitle', 'confirmMessage', 'confirmYes', 'confirmNo',
+            'navVault', 'navLifestyle', 'navInvest', 'navCasino', 'navProfile', 'dealerBadge', 'casinoBadge',
+            'vaultView', 'lifestyleView', 'investView', 'casinoView', 'profileView', 'lifestyleContent',
+            'workBtn', 'clickValueDisplay', 'efficiencyDisplay', 'businessesList', 'storeCountDisplay',
+            'vaultHome', 'businessDetail', 'startBusinessBtn',
+            'marketContent', 'carDemandList', 'demandTimer',
+            'garageStatus', 'buyGarageBtn', 'garageSlotsContainer',
+            'auctionSection', 'browseAuctionsBtn', 'browseAuctionsLabel', 'auctionResultsList',
+            'stockListContainer', 'portfolioValueDisplay',
+            'casinoGate', 'casinoContent', 'buyCasinoBtn', 'casinoLobby',
+            'btnOpenSlots', 'btnOpenRoulette', 'btnOpenBlackjack',
+            'casinoSlotsView', 'casinoRouletteView', 'casinoBlackjackView',
+            'slotResult', 'spinSlotsBtn', 'slotsBetInput',
+            'rouletteResult', 'rouletteRail', 'rouletteHistory', 'rouletteBetInput',
+            'btnBetRed', 'btnBetBlack', 'btnBetGreen',
+            'bjTable', 'bjStake', 'bjDealerScore', 'bjDealerHand', 'bjPlayerScore', 'bjPlayerHand', 'bjResult',
+            'bjControlsDeal', 'bjControlsPlay', 'btnBjDeal', 'btnBjHit', 'btnBjStand', 'btnBjDouble',
+            'btnBjReset', 'bjBetInput', 'bjBetContainer',
+            'statRank', 'statTotalEarnings', 'statTotalClicks', 'statCasinoPL',
+            'rankProgressBar', 'rankProgressText', 'prestigeBtn', 'prestigeInfo', 'hardResetBtn'
+        ];
+        this.elements = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+        this.elements.betChips = document.querySelectorAll('[data-chips-for]');
+        this.elements.behindDialog = document.querySelectorAll('#app > header, #app > main, #app > footer, #awayModal');
     },
 
     bindEvents() {
         const el = this.elements;
         const l = window.logic;
+        const bet = input => parseInt(input?.value) || 10;
 
         el.workBtn?.addEventListener('click', (e) => l.doWork(e));
 
         el.navVault?.addEventListener('click', () => this.switchTab('vault'));
-        el.navMarket?.addEventListener('click', () => this.switchTab('market'));
+        el.navLifestyle?.addEventListener('click', () => this.switchTab('lifestyle'));
         el.navInvest?.addEventListener('click', () => this.switchTab('invest'));
         el.navCasino?.addEventListener('click', () => this.switchTab('casino'));
         el.navProfile?.addEventListener('click', () => this.switchTab('profile'));
 
-        el.buyLicenseBtn?.addEventListener('click', () => l.buyLicense());
         el.buyCasinoBtn?.addEventListener('click', () => l.buyCasinoMembership());
 
-        el.spinSlotsBtn?.addEventListener('click', () => {
-            const bet = parseInt(el.slotsBetInput?.value) || 10;
-            l.spinSlots(bet);
-        });
-        el.btnBetRed?.addEventListener('click', () => {
-            const bet = parseInt(el.rouletteBetInput?.value) || 10;
-            l.playRoulette('Red', bet);
-        });
-        el.btnBetBlack?.addEventListener('click', () => {
-            const bet = parseInt(el.rouletteBetInput?.value) || 10;
-            l.playRoulette('Black', bet);
-        });
-        el.btnBetGreen?.addEventListener('click', () => {
-            const bet = parseInt(el.rouletteBetInput?.value) || 10;
-            l.playRoulette('Green', bet);
-        });
-        el.btnBjDeal?.addEventListener('click', () => {
-            const bet = parseInt(el.bjBetInput?.value) || 10;
-            l.bjDeal(bet);
-        });
+        el.spinSlotsBtn?.addEventListener('click', () => l.spinSlots(bet(el.slotsBetInput)));
+        el.btnBetRed?.addEventListener('click', () => l.playRoulette('Red', bet(el.rouletteBetInput)));
+        el.btnBetBlack?.addEventListener('click', () => l.playRoulette('Black', bet(el.rouletteBetInput)));
+        el.btnBetGreen?.addEventListener('click', () => l.playRoulette('Green', bet(el.rouletteBetInput)));
+        el.btnBjDeal?.addEventListener('click', () => l.bjDeal(bet(el.bjBetInput)));
         el.btnBjHit?.addEventListener('click', () => l.bjHit());
         el.btnBjStand?.addEventListener('click', () => l.bjStand());
+        el.btnBjDouble?.addEventListener('click', () => l.bjDouble());
+        el.btnBjReset?.addEventListener('click', () => l.bjReset());
         el.browseAuctionsBtn?.addEventListener('click', () => l.browseAuctions());
-        // Buy buttons are handled dynamically in renderAuction.
-        el.payForRepairBtn?.addEventListener('click', () => l.payForRepair());
-        el.sellCarBtn?.addEventListener('click', () => l.sellCar());
+        this.renderBetChips();
 
-        el.saveIndicator?.addEventListener('click', () => window.hardReset());
+        el.hardResetBtn?.addEventListener('click', () => window.hardReset());
+        el.awayCollectBtn?.addEventListener('click', () => l.collectAway());
+        el.confirmYes?.addEventListener('click', () => this.answer(true));
+        el.confirmNo?.addEventListener('click', () => this.answer(false));
+        el.confirmModal?.addEventListener('click', e => { if (e.target === el.confirmModal) this.answer(false); });
+        document.addEventListener?.('keydown', e => { if (e.key === 'Escape') this.answer(false); });
+        el.prestigeBtn?.addEventListener('click', () => l.prestige());
 
         // Casino sub-navigation
         el.btnOpenSlots?.addEventListener('click', () => this.showCasinoView('slots'));
         el.btnOpenRoulette?.addEventListener('click', () => {
             this.showCasinoView('roulette');
-            this.initRouletteWheel(); // Intentionally recreate the wheel now that the element is unhidden
+            this.initRouletteWheel(); // Recreate the wheel now that it is visible
         });
         el.btnOpenBlackjack?.addEventListener('click', () => this.showCasinoView('blackjack'));
+        el.btnHeaderBack?.addEventListener('click', () => this.goBack());
+        el.startBusinessBtn?.addEventListener('click', () => this.showBusiness('start'));
+    },
 
-        if (el.btnBackToLobby) {
-            el.btnBackToLobby.forEach(btn => btn.addEventListener('click', () => this.showCasinoLobby()));
-        }
+    icon(name, extraClass = '') {
+        return `<svg class="icon ${extraClass}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+    },
+
+    renderBetChips() {
+        const chips = [['$100', 100], ['$500', 500], ['$1k', 1000], ['Max', 'max']];
+        this.elements.betChips?.forEach(row => {
+            const input = document.getElementById(row.dataset.chipsFor);
+            chips.forEach(([label, value]) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'chip';
+                chip.innerText = label;
+                chip.addEventListener('click', () => {
+                    input.value = value === 'max' ? Math.floor(window.state.balance) : value;
+                    this.updateUI();
+                });
+                row.appendChild(chip);
+            });
+        });
+    },
+
+    // A casino game takes over the top panel: its name and a back button
+    showCasinoScreen(viewName) {
+        const el = this.elements;
+        const views = { slots: el.casinoSlotsView, roulette: el.casinoRouletteView, blackjack: el.casinoBlackjackView };
+        const playing = Boolean(views[viewName]);
+
+        Object.entries(views).forEach(([name, view]) => view?.classList[name === viewName ? 'remove' : 'add']('hidden'));
+        el.casinoLobby?.classList[playing ? 'add' : 'remove']('hidden');
+        el.app?.classList[playing ? 'add' : 'remove']('playing');
+        el.btnHeaderBack?.classList[playing ? 'remove' : 'add']('hidden');
+        if (el.headerTitle) el.headerTitle.innerText = GAME_TITLES[viewName] || SCREEN_TITLES.casino;
     },
 
     showCasinoLobby() {
-        const el = this.elements;
-        if (el.casinoLobby) el.casinoLobby.classList.remove('hidden');
-        if (el.casinoSlotsView) el.casinoSlotsView.classList.add('hidden');
-        if (el.casinoRouletteView) el.casinoRouletteView.classList.add('hidden');
-        if (el.casinoBlackjackView) el.casinoBlackjackView.classList.add('hidden');
+        this.showCasinoScreen('lobby');
     },
 
     showCasinoView(viewName) {
-        const el = this.elements;
-        if (el.casinoLobby) el.casinoLobby.classList.add('hidden');
-        if (el.casinoSlotsView) el.casinoSlotsView.classList.add('hidden');
-        if (el.casinoRouletteView) el.casinoRouletteView.classList.add('hidden');
-        if (el.casinoBlackjackView) el.casinoBlackjackView.classList.add('hidden');
-
-        if (viewName === 'slots' && el.casinoSlotsView) el.casinoSlotsView.classList.remove('hidden');
-        if (viewName === 'roulette' && el.casinoRouletteView) el.casinoRouletteView.classList.remove('hidden');
-        if (viewName === 'blackjack' && el.casinoBlackjackView) el.casinoBlackjackView.classList.remove('hidden');
+        this.showCasinoScreen(viewName);
     },
 
     formatMoney(amount) {
@@ -189,88 +154,40 @@ const ui = {
     },
 
     switchTab(tabId) {
+        if (!SCREEN_TITLES[tabId]) tabId = 'vault'; // saves can point at a tab that has moved
         window.state.activeTab = tabId;
         const el = this.elements;
+        const screens = {
+            vault: [el.navVault, el.vaultView],
+            lifestyle: [el.navLifestyle, el.lifestyleView],
+            invest: [el.navInvest, el.investView],
+            casino: [el.navCasino, el.casinoView],
+            profile: [el.navProfile, el.profileView]
+        };
 
-        [el.navVault, el.navMarket, el.navInvest, el.navCasino, el.navProfile].forEach(btn => {
-            if (!btn) return;
-            btn.classList.remove('active', 'opacity-100');
-            btn.classList.add('opacity-40');
-            btn.querySelector('.nav-icon')?.classList.replace('text-white', 'text-slate-400');
-            btn.querySelector('.nav-icon')?.classList.replace('text-fuchsia-400', 'text-slate-400');
-            btn.querySelector('.nav-icon')?.classList.replace('text-sky-400', 'text-slate-400');
-            btn.querySelector('.nav-text')?.classList.replace('text-white', 'text-slate-400');
-            btn.querySelector('.nav-text')?.classList.replace('text-fuchsia-400', 'text-slate-400');
-            btn.querySelector('.nav-text')?.classList.replace('text-sky-400', 'text-slate-400');
+        Object.entries(screens).forEach(([name, [nav, view]]) => {
+            nav?.classList[name === tabId ? 'add' : 'remove']('active');
+            view?.classList[name === tabId ? 'remove' : 'add']('hidden');
         });
 
-        if (el.vaultView) el.vaultView.classList.add('hidden');
-        if (el.marketView) el.marketView.classList.add('hidden');
-        if (el.investView) el.investView.classList.add('hidden');
-        if (el.casinoView) el.casinoView.classList.add('hidden');
-        if (el.profileView) el.profileView.classList.add('hidden');
+        if (el.app) el.app.dataset.tab = tabId;
+        el.app?.classList[tabId === 'casino' ? 'add' : 'remove']('night');
+        this.showCasinoLobby();
+        if (el.headerTitle) el.headerTitle.innerText = SCREEN_TITLES[tabId] || SCREEN_TITLES.vault;
 
-        const appContainer = document.querySelector('.bg-slate-900, .bg-violet-950');
-        if (appContainer) {
-            if (tabId === 'casino') {
-                appContainer.classList.add('bg-violet-950');
-                appContainer.classList.remove('bg-slate-900');
-            } else {
-                appContainer.classList.add('bg-slate-900');
-                appContainer.classList.remove('bg-violet-950');
-            }
-        }
-
-        // The license gate logic handles its own visibility in switchTab('market') and renderMarket()
-        // Here we handle the notification dot specifically for the dealer state
         this.updateDealerBadge();
 
         if (tabId === 'vault') {
-            el.navVault?.classList.add('active', 'opacity-100');
-            el.navVault?.classList.remove('opacity-40');
-            el.navVault?.querySelector('.nav-icon')?.classList.replace('text-slate-400', 'text-white');
-            el.navVault?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-white');
-            el.vaultView?.classList.remove('hidden');
-            if (el.headerTitle) el.headerTitle.innerText = "Vault Balance";
-            this.renderBusinesses();
-        } else if (tabId === 'market') {
-            el.navMarket?.classList.add('active', 'opacity-100');
-            el.navMarket?.classList.remove('opacity-40');
-            el.navMarket?.querySelector('.nav-icon')?.classList.replace('text-slate-400', 'text-white');
-            el.navMarket?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-white');
-            el.marketView?.classList.remove('hidden');
-            if (el.headerTitle) el.headerTitle.innerText = "Auto Dealership";
-
-            if (window.state.hasDealerLicense) {
-                el.licenseGate?.classList.add('hidden');
-                el.marketContent?.classList.remove('hidden');
-                this.renderAuction();
-                this.renderGarage();
-            } else {
-                el.licenseGate?.classList.remove('hidden');
-                el.marketContent?.classList.add('hidden');
-            }
+            this.showBusiness(null);
+        } else if (tabId === 'lifestyle') {
+            this.renderLifestyle();
         } else if (tabId === 'invest') {
-            el.navInvest?.classList.add('active', 'opacity-100');
-            el.navInvest?.classList.remove('opacity-40');
-            el.navInvest?.querySelector('.nav-icon')?.classList.replace('text-slate-400', 'text-white');
-            el.navInvest?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-white');
-            el.investView?.classList.remove('hidden');
-            if (el.headerTitle) el.headerTitle.innerText = "Equities Portfolio";
             this.renderMarket();
         } else if (tabId === 'casino') {
-            el.navCasino?.classList.add('active', 'opacity-100');
-            el.navCasino?.classList.remove('opacity-40');
-            el.navCasino?.querySelector('.nav-icon')?.classList.replace('text-slate-400', 'text-fuchsia-400');
-            el.navCasino?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-fuchsia-400');
-            el.casinoView?.classList.remove('hidden');
-            if (el.headerTitle) el.headerTitle.innerText = "Neon District Casino";
-
             if (window.state.hasCasinoMembership) {
                 el.casinoBadge?.classList.add('hidden');
                 el.casinoGate?.classList.add('hidden');
                 el.casinoContent?.classList.remove('hidden');
-                this.showCasinoLobby();
                 if (!window.state.rouletteHistory) window.state.rouletteHistory = [];
                 this.initRouletteWheel();
                 this.renderBlackjack();
@@ -280,102 +197,134 @@ const ui = {
                 el.casinoContent?.classList.add('hidden');
             }
         } else if (tabId === 'profile') {
-            el.navProfile?.classList.add('active', 'opacity-100');
-            el.navProfile?.classList.remove('opacity-40');
-            el.navProfile?.querySelector('.nav-icon')?.classList.replace('text-slate-400', 'text-sky-400');
-            el.navProfile?.querySelector('.nav-text')?.classList.replace('text-slate-400', 'text-sky-400');
-            el.profileView?.classList.remove('hidden');
-            if (el.headerTitle) el.headerTitle.innerText = "Player Profile";
             this.renderProfile();
         }
+
+        this.syncVisualsSilently();
     },
 
     updateDealerBadge() {
-        const el = this.elements;
-        if (!el.dealerBadge) return;
+        const badge = this.elements.dealerBadge;
+        if (!badge) return;
 
-        let needsAttention = false;
-
-        if (!window.state.hasDealerLicense) {
-            // Red badge if they haven't bought the license yet and have capital
-            if (window.state.balance >= 2500) {
-                el.dealerBadge.classList.remove('hidden');
-                el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-red-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,0.8)]";
-                return;
-            }
-        } else if (window.state.carDealership) {
-            if (window.state.carDealership.status === 'ready' || window.state.carDealership.status === 'needs_repair') {
-                needsAttention = true;
-                if (window.state.carDealership.status === 'ready') {
-                    el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-emerald-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(16,185,129,0.8)]";
-                } else {
-                    el.dealerBadge.className = "absolute top-[8px] right-[20%] w-2 h-2 bg-red-500 rounded-full border border-slate-900 shadow-[0_0_5px_rgba(239,68,68,0.8)] animate-pulse";
-                }
-            }
+        // The dot sits on the Vault button and covers every business that needs attention
+        const cars = window.state.hasDealerLicense ? window.state.dealerCars || [] : [];
+        const brokenTaxi = (window.state.taxi?.cars || []).some(c => c.broken);
+        let tone = null;
+        if (brokenTaxi || cars.some(c => c.status === 'needs_repair')) {
+            tone = 'alert';
+        } else if (cars.some(c => c.status === 'ready')) {
+            tone = 'good';
         }
 
-        if (needsAttention) {
-            el.dealerBadge.classList.remove('hidden');
+        if (tone) {
+            badge.className = `badge badge-${tone}`;
+            badge.classList.remove('hidden');
         } else {
-            el.dealerBadge.classList.add('hidden');
+            badge.classList.add('hidden');
         }
+    },
+
+    getCarPhoto(car) {
+        return CAR_PHOTOS[car.name] ? `Assets/cars-web/${CAR_PHOTOS[car.name]}.jpg` : null;
+    },
+
+    renderCarPhoto(car) {
+        const src = this.getCarPhoto(car);
+        return src ? `<img class="car-photo" src="${src}" alt="${car.name}" width="640" height="429">` : '';
+    },
+
+    // Stands in for the photo when a car has none
+    carTile(car) {
+        if (this.getCarPhoto(car)) return '';
+        const tier = window.logic.getCarTier(car);
+        const icon = car.name.includes('Truck') ? 'truck' : 'car';
+        return `<span class="tile ${tier.id}">${this.icon(icon)}</span>`;
+    },
+
+    renderTierBadge(car) {
+        const tier = window.logic.getCarTier(car);
+        return `<span class="tag ${tier.id}">${tier.label}</span>`;
+    },
+
+    renderCarDemand() {
+        const el = this.elements;
+        if (!el.carDemandList) return;
+        el.carDemandList.innerHTML = window.CAR_TIERS.map(tier => {
+            const percent = Math.round(window.logic.getDemand({ tier: tier.id }) * 100);
+            const tone = percent >= 100 ? 'text-emerald-400' : 'text-red-400';
+            return `<div class="card demand">
+                <span class="muted">${tier.label}</span>
+                <strong class="${tone}">${percent >= 100 ? '▲' : '▼'} ${percent}%</strong>
+            </div>`;
+        }).join('');
     },
 
     renderAuction() {
         const el = this.elements;
         if (!el.auctionResultsList) return;
 
-        if (window.state.auctionCars && window.state.auctionCars.length > 0) {
-            let html = '';
+        if (window.state.carDealership) { // one-time move from the old single-car save
+            window.state.dealerCars = [...(window.state.dealerCars || []), window.state.carDealership];
+            window.state.carDealership = null;
+        }
 
-            let dealerCars = window.state.dealerCars || [];
-            if (window.state.carDealership) {
-                dealerCars.push(window.state.carDealership);
-                window.state.carDealership = null; // one-time migrate
+        const garageFull = (window.state.dealerCars || []).length >= window.logic.getGarageSlots();
+
+        el.auctionResultsList.innerHTML = (window.state.auctionCars || []).map((car, index) => {
+            const inspectCost = window.logic.getInspectCost(car);
+            const cannotInspect = car.inspected || window.state.balance < inspectCost;
+            const cannotBuy = garageFull || window.state.balance < car.price;
+            let condition = '<span class="muted">Condition unknown</span>';
+            if (car.inspected) {
+                condition = car.hasHiddenFault
+                    ? `<strong class="text-red-400">Engine fault: ${this.formatMoney(window.logic.getRepairCost(car))} to repair</strong>`
+                    : '<strong class="text-emerald-400">No faults found</strong>';
             }
 
-            const slotsAvailable = window.logic.getGarageSlots();
-            const currentCars = dealerCars.length;
+            return `
+            <article class="card car">
+                ${this.renderCarPhoto(car)}
+                <div class="row">
+                    ${this.carTile(car)}
+                    <div class="grow"><h3>${car.name}</h3>${this.renderTierBadge(car)}</div>
+                    <span class="figure">${car.haggled ? `<s>${this.formatMoney(car.value)}</s>` : ''}${this.formatMoney(car.price)}</span>
+                </div>
+                <p class="row between"><span class="muted">Sells for today</span>
+                    <strong class="text-emerald-400">about ${this.formatMoney(window.logic.getSalePrice(car))}</strong></p>
+                <p>${condition}</p>
+                <div class="trio">
+                    <button id="auctionInspect-${index}" class="btn btn-sky" onclick="window.logic.inspectCar(${index})" ${cannotInspect ? 'disabled' : ''}>
+                        ${car.inspected ? 'Inspected' : `Inspect<small>${this.formatMoney(inspectCost)}</small>`}</button>
+                    <button class="btn btn-sky" onclick="window.logic.haggleCar(${index})" ${car.haggled ? 'disabled' : ''}>
+                        ${car.haggled ? '10% off' : 'Haggle<small>50/50</small>'}</button>
+                    <button id="auctionBuy-${index}" class="btn btn-yellow" onclick="window.logic.buyAuction(${index})" ${cannotBuy ? 'disabled' : ''}>
+                        ${garageFull ? 'Garage full' : 'Buy'}</button>
+                </div>
+            </article>`;
+        }).join('');
+    },
 
-            window.state.auctionCars.forEach((car, index) => {
-                const canAfford = window.state.balance >= car.price;
-                const isGarageFull = currentCars >= slotsAvailable;
-                const disableBtn = !canAfford || isGarageFull;
-
-                html += `
-                    <div class="bg-slate-850 p-4 mb-2 rounded-xl border border-slate-700 shadow-md flex-col gap-4 transition-all duration-300">
-                        <div class="flex justify-between items-center">
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-0.5">Lot
-                                    #<span>${car.id}</span></span>
-                                <h3 class="text-white font-bold text-base">${car.name}</h3>
-                            </div>
-                            <div class="text-2xl">${car.icon}</div>
-                        </div>
-
-                        <div class="flex items-center justify-between pt-3 border-t border-slate-800">
-                            <div class="flex flex-col">
-                                <span class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Asking
-                                    Price</span>
-                                <span class="text-slate-200 font-mono font-bold text-lg">${this.formatMoney(car.price)}</span>
-                            </div>
-                            <button onclick="window.logic.buyAuction(${index})"
-                                class="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-900 font-bold px-5 py-2 rounded-lg text-sm shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all" ${disableBtn ? 'disabled' : ''}>${isGarageFull ? 'Garage Full' : 'Purchase'}</button>
-                        </div>
-                    </div>
-                `;
-            });
-            el.auctionResultsList.innerHTML = html;
-        } else {
-            el.auctionResultsList.innerHTML = '';
+    renderCarStatus(car, index) {
+        if (car.status === 'restoring') {
+            return `
+                <p class="row between"><span class="muted">Restoring</span>
+                    <strong id="carRestoreTimer-${index}">...</strong></p>
+                <div class="meter"><div id="carRestoreBar-${index}" style="width: 0%"></div></div>`;
         }
-
-        const dealerCarsCount = (window.state.dealerCars || []).length;
-        if (dealerCarsCount >= window.logic.getGarageSlots()) {
-            el.auctionSection?.classList.add('opacity-50', 'pointer-events-none');
-        } else {
-            el.auctionSection?.classList.remove('opacity-50', 'pointer-events-none');
+        if (car.status === 'needs_repair') {
+            const cost = window.logic.getRepairCost(car);
+            return `
+                <p class="row text-red-400">${this.icon('alert')}<strong>Hidden engine fault. Repairs add 15 seconds.</strong></p>
+                <button id="repairBtn-${index}" class="btn btn-red wide" onclick="window.logic.payForRepair(${index})" ${window.state.balance < cost ? 'disabled' : ''}>
+                    Pay ${this.formatMoney(cost)} for repairs</button>`;
         }
+        const salePrice = window.logic.getSalePrice(car);
+        const profit = salePrice - car.buyPrice - (car.repairPaid || 0);
+        return `
+            <p class="row between"><span class="muted">Profit if sold now</span>
+                <strong class="${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}">${profit >= 0 ? '+' : '-'}${this.formatMoney(Math.abs(profit))}</strong></p>
+            <button class="btn btn-green btn-big wide" onclick="window.logic.sellCar(${index})">Sell for ${this.formatMoney(salePrice)}</button>`;
     },
 
     renderGarage() {
@@ -383,94 +332,35 @@ const ui = {
         if (!el.garageSlotsContainer) return;
 
         if (!window.state.dealerCars) window.state.dealerCars = [];
+        this.renderCarDemand();
 
         const totalSlots = window.logic.getGarageSlots();
         const expansionCost = window.logic.getGarageExpansionCost();
 
         if (el.garageStatus) el.garageStatus.innerText = `${window.state.dealerCars.length}/${totalSlots} Slots`;
-
         if (el.buyGarageBtn) {
             el.buyGarageBtn.innerText = `Expand (${this.formatMoney(expansionCost)})`;
             el.buyGarageBtn.disabled = window.state.balance < expansionCost;
-            el.buyGarageBtn.classList.remove('hidden');
         }
 
         let html = '';
-
         for (let i = 0; i < totalSlots; i++) {
             const car = window.state.dealerCars[i];
-
-            if (!car) {
-                html += `
-                    <div class="bg-slate-850 border border-slate-800 p-5 rounded-2xl relative overflow-hidden flex flex-col items-center justify-center text-center py-6 shadow-lg min-h-[120px]">
-                        <div class="text-4xl mb-2 opacity-50 text-slate-600">🏢</div>
-                        <p class="text-sm font-bold text-slate-500 uppercase tracking-widest">Empty Slot</p>
-                        <p class="text-xs text-slate-600 mt-1">Acquire a vehicle from the auction</p>
-                    </div>
-                `;
-            } else {
-                let statusHtml = '';
-                if (car.status === 'restoring') {
-                    statusHtml = `
-                        <div class="w-full">
-                            <div class="flex justify-between items-center mb-1.5">
-                                <span class="text-orange-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                                    <div class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></div>
-                                    Restoring...
-                                </span>
-                                <span id="carRestoreTimer-${i}" class="text-slate-400 text-[10px] font-bold font-mono">...</span>
-                            </div>
-                            <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800/50">
-                                <div id="carRestoreBar-${i}" class="h-full bg-gradient-to-r from-orange-600 to-amber-400 w-[0%] relative rounded-full"></div>
-                            </div>
+            html += car
+                ? `<article class="card car">
+                        ${this.renderCarPhoto(car)}
+                        <div class="row">
+                            ${this.carTile(car)}
+                            <div class="grow"><h3>${car.name}</h3>${this.renderTierBadge(car)}</div>
+                            <div class="quote"><span class="muted">Paid</span><strong>${this.formatMoney(car.buyPrice)}</strong></div>
                         </div>
-                    `;
-                } else if (car.status === 'needs_repair') {
-                    statusHtml = `
-                        <div class="w-full flex flex-col mt-2 pt-4 border-t border-red-900/50">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-red-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                                    ⚠️ Hidden Engine Fault
-                                </span>
-                                <span class="text-slate-400 text-xs">Cost: <span class="text-red-400 font-bold font-mono inline-block ml-1">-$300.00</span></span>
-                            </div>
-                            <p class="text-xs text-slate-400 mb-3">Mechanics found unexpected damage. Fixing it adds 15s.</p>
-                            <button id="repairBtn-${i}" onclick="window.logic.payForRepair(${i})" class="w-full py-2.5 bg-red-900/40 hover:bg-red-800/60 border border-red-700 text-red-100 rounded-xl font-bold uppercase tracking-widest text-xs transition-all disabled:opacity-50" ${window.state.balance < 300 ? 'disabled' : ''}>
-                                Pay $300 for Repairs
-                            </button>
-                        </div>
-                    `;
-                } else if (car.status === 'ready') {
-                    statusHtml = `
-                        <div class="w-full flex flex-col mt-2 pt-4 border-t border-slate-800">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Ready for Sale</span>
-                                <span class="text-slate-400 text-xs">Return: <span class="text-emerald-400 font-bold font-mono inline-block ml-1">${this.formatMoney(car.sellPrice)}</span></span>
-                            </div>
-                            <button onclick="window.logic.sellCar(${i})" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white rounded-xl font-bold uppercase tracking-widest text-sm shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all">
-                                Sell Vehicle (+25%)
-                            </button>
-                        </div>
-                    `;
-                }
-
-                html += `
-                    <div class="bg-slate-850 border border-slate-800 p-5 rounded-2xl relative overflow-hidden flex flex-col gap-4 shadow-lg min-h-[120px]">
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h3 class="text-slate-200 font-bold text-lg">${car.name}</h3>
-                                <p class="text-slate-400 text-xs mt-1">Acquired: <span class="text-amber-400 font-mono inline-block ml-1">${this.formatMoney(car.buyPrice)}</span></p>
-                            </div>
-                            <div class="text-xl pl-2">${car.icon}</div>
-                        </div>
-                        ${statusHtml}
-                    </div>
-                `;
-            }
+                        ${this.renderCarStatus(car, i)}
+                    </article>`
+                : `<div class="empty">${this.icon('car')}<strong>Empty slot</strong><span>Buy a car at the auction</span></div>`;
         }
 
         el.garageSlotsContainer.innerHTML = html;
-        if (window.state.activeTab === 'market') this.renderAuction();
+        if (this.isDealerOpen()) this.renderAuction();
     },
 
     updateCarProgressBar(index, timerText, progressPercent) {
@@ -480,80 +370,65 @@ const ui = {
         if (barEl) barEl.style.width = `${progressPercent}%`;
     },
 
+    sparkline(values, tone) {
+        const low = Math.min(...values);
+        const range = Math.max(...values) - low;
+        const points = (values.length > 1 ? values : [values[0], values[0]]).map((value, i, all) => {
+            const x = 2 + (i / (all.length - 1)) * 56;
+            const y = range ? 23 - ((value - low) / range) * 20 : 13;
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+        return `<svg class="spark ${tone}" viewBox="0 0 60 26" aria-hidden="true"><polyline points="${points}"/></svg>`;
+    },
+
     renderMarket() {
         const el = this.elements;
         if (!el.stockListContainer) return;
 
         if (el.portfolioValueDisplay) {
-            el.portfolioValueDisplay.innerText = 'Port: ' + this.formatMoney(window.logic.getPortfolioValue());
+            el.portfolioValueDisplay.innerText = this.formatMoney(window.logic.getPortfolioValue());
         }
-
-        let html = '';
         if (!window.state.portfolio) window.state.portfolio = {};
 
-        // Add the toggle bar at the top
         const isMax = window.stockMultiplier === 'max';
-        html += `
-        <div class="flex justify-between items-center bg-slate-850 p-2 px-3 rounded-xl border border-slate-700/80 shadow-sm mb-4">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trade Volume</span>
-            <div class="flex bg-slate-900 rounded-lg p-1 border border-slate-800">
-                <button onclick="window.logic.toggleStockMultiplier()" class="px-3 py-1 text-xs font-bold rounded-md transition-colors ${!isMax ? 'bg-slate-700 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">x1</button>
-                <button onclick="window.logic.toggleStockMultiplier()" class="px-3 py-1 text-xs font-bold rounded-md transition-colors ${isMax ? 'bg-amber-600/80 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">MAX</button>
-            </div>
-        </div>
-        `;
+        // Only the option that is not selected switches, so tapping the current one does nothing
+        const volume = (label, selected) => `<button class="btn ${selected ? 'btn-yellow' : ''}"
+            aria-pressed="${selected}" ${selected ? '' : 'onclick="window.logic.toggleStockMultiplier()"'}>${label}</button>`;
+        let html = `<div class="duo">${volume('Trade 1', !isMax)}${volume('Trade max', isMax)}</div>`;
 
         window.MARKET_DATA.forEach(s => {
             const price = window.stockPrices[s.id];
-            const hist = window.stockHistory[s.id];
+            const change = window.logic.getPriceChange(s.id);
+            const direction = change > 0 ? 'up' : (change < 0 ? 'down' : '');
+            const tone = change > 0 ? 'text-emerald-400' : (change < 0 ? 'text-red-400' : 'muted');
+            const arrow = change > 0 ? '▲' : (change < 0 ? '▼' : '');
             const port = window.state.portfolio[s.id] || { shares: 0, totalSpent: 0 };
-            const multArg = window.stockMultiplier === 'max' ? "'max'" : "1";
-            const btnLabel = window.stockMultiplier === 'max' ? "MAX" : "x1";
+            const amount = isMax ? "'max'" : '1';
 
-            let icon = '';
-            let colorClass = 'text-slate-200';
-            if (hist === 1) { icon = '▲'; colorClass = 'text-emerald-400'; }
-            else if (hist === -1) { icon = '▼'; colorClass = 'text-red-400'; }
-
-            let plHtml = '';
+            let profitRow = '';
             if (port.shares > 0) {
-                const avg = port.totalSpent / port.shares;
-                const val = port.shares * price;
-                const diff = val - port.totalSpent;
-                const diffPerc = (diff / port.totalSpent) * 100;
-                const plClass = diff >= 0 ? 'text-emerald-500' : 'text-red-500';
-                const plSign = diff >= 0 ? '+' : '';
-                plHtml = `<div class="mt-2 text-[10px] sm:text-xs text-slate-400 border-t border-slate-700/50 pt-2 flex justify-between">
-                    <span>Avg: ${this.formatMoney(avg)}</span> 
-                    <span class="font-bold font-mono ${plClass}">P/L: ${plSign}${this.formatMoney(diff)} (${plSign}${diffPerc.toFixed(1)}%)</span>
-                </div>`;
+                const diff = port.shares * price - port.totalSpent;
+                const sign = diff >= 0 ? '+' : '-';
+                profitRow = `<p class="row between pl">
+                    <span class="muted">Average ${this.formatMoney(port.totalSpent / port.shares)}</span>
+                    <strong class="${diff >= 0 ? 'text-emerald-400' : 'text-red-400'}">${sign}${this.formatMoney(Math.abs(diff))} (${sign}${Math.abs(diff / port.totalSpent * 100).toFixed(1)}%)</strong>
+                </p>`;
             }
 
             html += `
-            <div class="bg-slate-850 p-4 rounded-xl border border-slate-700/80 shadow">
-                <div class="flex justify-between items-start">
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold text-slate-400 tracking-wider">$${s.id}</span>
-                        <span class="text-sm sm:text-base font-bold text-white">${s.name}</span>
-                        <span class="text-[10px] text-slate-500">Own: ${port.shares} shares</span>
-                    </div>
-                    <div class="flex flex-col items-end">
-                        <div class="font-mono text-sm sm:text-base font-bold ${colorClass} transition-colors mb-2">
-                            ${icon} ${this.formatMoney(price)}
-                        </div>
-                        <div class="flex gap-2 w-full justify-end">
-                            <button onclick="window.logic.sellStock('${s.id}', ${multArg})" class="flex-1 w-16 py-1.5 bg-red-900/40 hover:bg-red-800/60 border border-red-800/50 rounded shadow-sm text-xs font-bold text-red-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed" ${port.shares <= 0 ? 'disabled' : ''}>
-                                SELL ${btnLabel}
-                            </button>
-                            <button onclick="window.logic.buyStock('${s.id}', ${multArg})" class="flex-1 w-16 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded shadow-sm text-xs font-bold text-white transition-all disabled:opacity-50" ${window.state.balance < price ? 'disabled' : ''}>
-                                BUY ${btnLabel}
-                            </button>
-                        </div>
-                    </div>
+            <article class="card stack">
+                <div class="row">
+                    <div class="grow"><h3>${s.name}</h3><span class="muted">${port.shares} owned</span></div>
+                    ${this.sparkline(window.stockTrails[s.id], direction)}
+                    <div class="quote"><strong>${this.formatMoney(price)}</strong>
+                        <span class="${tone}">${arrow} ${Math.abs(change).toFixed(1)}%</span></div>
                 </div>
-                ${plHtml}
-            </div>
-            `;
+                <div class="duo">
+                    <button class="btn btn-green" onclick="window.logic.sellStock('${s.id}', ${amount})" ${port.shares <= 0 ? 'disabled' : ''}>${isMax ? 'Sell all' : 'Sell'}</button>
+                    <button class="btn btn-yellow" onclick="window.logic.buyStock('${s.id}', ${amount})" ${window.state.balance < price ? 'disabled' : ''}>${isMax ? 'Buy max' : 'Buy'}</button>
+                </div>
+                ${profitRow}
+            </article>`;
         });
         el.stockListContainer.innerHTML = html;
     },
@@ -563,255 +438,171 @@ const ui = {
         if (!el.activityLogList) return;
         el.activityLogList.innerHTML = '';
         window.state.logs.forEach(log => {
-            const div = document.createElement('div');
-            div.className = `flex justify-between items-center ${log.colorClass}`;
-            div.innerHTML = `<span>${log.msg}</span><span class="text-slate-600 ml-2">${log.time}</span>`;
-            el.activityLogList.appendChild(div);
+            const row = document.createElement('div');
+            row.className = `log ${log.colorClass}`;
+            const message = document.createElement('span');
+            message.textContent = log.msg;
+            const time = document.createElement('time');
+            time.textContent = log.time;
+            row.append(message, time);
+            el.activityLogList.appendChild(row);
         });
+    },
+
+    slotSymbol(symbol) {
+        const icon = SLOT_ICONS[symbol];
+        return icon ? this.icon(icon, `symbol-${icon}`) : '<span class="symbol-seven">7</span>';
     },
 
     renderSlotsResult(r1, r2, r3, msg, color) {
         const el = this.elements;
-        const containers = [
+        const reels = [
             { el: document.getElementById('slot1-container'), val: r1, time: 1.5 },
             { el: document.getElementById('slot2-container'), val: r2, time: 2.5 },
             { el: document.getElementById('slot3-container'), val: r3, time: 3.5 }
         ];
-
         const symbols = ['🎰', '💎', '🍒', '7️⃣'];
+        const item = symbol => `<span class="reel-item">${this.slotSymbol(symbol)}</span>`;
+        const randomItem = () => item(symbols[Math.floor(Math.random() * symbols.length)]);
 
         if (el.slotResult) {
-            el.slotResult.innerText = "SPINNING...";
-            el.slotResult.className = `text-xs font-bold uppercase tracking-widest h-4 mb-4 text-violet-400 animate-pulse`;
+            el.slotResult.innerText = 'Spinning...';
+            el.slotResult.className = 'result-line text-violet-400';
         }
 
-        containers.forEach(c => {
-            if (!c.el) return;
-            // Clean up any old jitter from previous bugs
-            if (c.el.parentElement.classList.contains('spinning')) {
-                c.el.parentElement.classList.remove('spinning');
-            }
+        reels.forEach(reel => {
+            if (!reel.el) return;
 
-            // Calculate number of items for constant velocity across different durations
-            const numItems = Math.floor(c.time * 25);
-            let reelHtml = '<div class="reel-inner flex flex-col items-center w-full">';
-            // Padding item so bounce doesn't expose empty space at the top
-            reelHtml += `<span class="h-10 flex items-center justify-center">${symbols[Math.floor(Math.random() * symbols.length)]}</span>`;
-            // The actual target symbol
-            reelHtml += `<span class="h-10 flex items-center justify-center">${c.val}</span>`;
-            // Random blurring items below
-            for (let i = 0; i < numItems; i++) {
-                reelHtml += `<span class="h-10 flex items-center justify-center">${symbols[Math.floor(Math.random() * symbols.length)]}</span>`;
-            }
-            reelHtml += '</div>';
+            // More symbols for longer spins keeps the speed even. Index 1 is where the reel stops;
+            // the item above it hides the gap when the reel bounces.
+            const extra = Array.from({ length: Math.floor(reel.time * 25) }, randomItem).join('');
+            reel.el.innerHTML = `<div class="reel-inner">${randomItem()}${item(reel.val)}${extra}</div>`;
 
-            c.el.innerHTML = reelHtml;
-            const inner = c.el.querySelector('.reel-inner');
-            inner.style.transform = 'translateY(0)';
-            inner.style.animation = 'none';
-            inner.classList.remove('slot-reel-stop');
-
-            // Apply jitter class directly to the specific slot wrapper, not the whole window
-            c.el.classList.add('spinning');
-
+            const inner = reel.el.querySelector('.reel-inner');
             void inner.offsetWidth;
 
-            const itemHeight = inner.lastElementChild.offsetHeight || 40;
-            const containerHeight = c.el.offsetHeight || 48;
-            const offset = (containerHeight - itemHeight) / 2;
+            const itemHeight = inner.lastElementChild.offsetHeight || 64;
+            const reelHeight = reel.el.clientHeight || 83;
+            const startPos = -(inner.scrollHeight - reelHeight);
+            const endPos = -(itemHeight - (reelHeight - itemHeight) / 2);
 
-            // Start at the bottom (showing the last generated random items)
-            const startPos = -(inner.scrollHeight - containerHeight);
-            // End matching the target (index 1 = itemHeight)
-            const endPos = -(itemHeight - offset);
-
-            inner.style.setProperty('--spin-duration', `${c.time}s`);
             inner.style.setProperty('--reel-start-position', `${startPos}px`);
             inner.style.setProperty('--reel-end-position', `${endPos}px`);
             inner.classList.add('slot-reel');
-            inner.style.animation = `reelSpin ${c.time}s cubic-bezier(0.1, 0.1, 0.2, 1) forwards`;
+            inner.style.animation = `reelSpin ${reel.time}s cubic-bezier(0.1, 0.1, 0.2, 1) forwards`;
 
             setTimeout(() => {
                 inner.classList.remove('slot-reel');
                 inner.classList.add('slot-reel-stop');
                 inner.style.animation = 'none';
                 void inner.offsetWidth;
-                inner.style.animation = `slot-clunk 0.3s ease-out forwards`;
-                c.el.classList.remove('spinning');
-            }, c.time * 1000);
+                inner.style.animation = 'slot-clunk 0.3s ease-out forwards';
+            }, reel.time * 1000);
         });
 
         setTimeout(() => {
             if (el.slotResult) {
                 el.slotResult.innerText = msg;
-                el.slotResult.className = `text-xs font-bold uppercase tracking-widest h-4 mb-4 ${color}`;
+                el.slotResult.className = `result-line ${color}`;
             }
         }, 3500);
     },
 
     initRouletteWheel() {
         const track = document.getElementById('rouletteRail');
-        if (!track) return;
+        if (!track || window.logic.spinning.roulette) return; // rebuilding would cut off a spin
         track.innerHTML = '';
-        // 15-tile CSGO pattern (1 Green, 7 Red, 7 Black alternating)
-        const wheelSequence = [
-            { color: 'G' }, { color: 'R' }, { color: 'B' }, { color: 'R' }, { color: 'B' },
-            { color: 'R' }, { color: 'B' }, { color: 'R' }, { color: 'B' }, { color: 'R' },
-            { color: 'B' }, { color: 'R' }, { color: 'B' }, { color: 'R' }, { color: 'B' }
-        ];
 
-        let fullTrack = [];
-        // Repeat the sequence multiple times to create a long track for spinning
-        for (let i = 0; i < 5; i++) { // 5 full rotations
-            fullTrack = fullTrack.concat(wheelSequence);
-        }
-        // Add one more full sequence to ensure enough tiles for the ball to land
-        fullTrack = fullTrack.concat(wheelSequence);
+        // 15 tiles: 1 green, then red and black alternating
+        const sequence = ['G', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B', 'R', 'B'];
+        const images = { R: './Assets/roulette_red.png', B: './Assets/roulette_black.png', G: './Assets/roulette_green.png' };
 
-
-        fullTrack.forEach((item, idx) => {
-            const div = document.createElement('div');
-            // Added bg-cover bg-center bg-no-repeat so PNGs appear correctly inside the tile
-            div.className = "w-16 h-16 mx-[2px] rounded-lg shadow-inner flex items-center justify-center flex-shrink-0 text-white font-black text-xl border-[2px] border-slate-900/50 roulette-tile bg-cover bg-center bg-no-repeat";
-
-            let imageUrl = '';
-            if (item.color === 'R') {
-                imageUrl = `./Assets/roulette_red.png`;
-            } else if (item.color === 'B') {
-                imageUrl = `./Assets/roulette_black.png`;
-            } else { // Green (0 or 00)
-                imageUrl = `./Assets/roulette_green.png`;
-            }
-            div.style.backgroundImage = `url('${imageUrl}')`;
-
-            div.dataset.idx = idx;
-            div.dataset.color = item.color;
-            track.appendChild(div);
+        // Six repeats give the wheel room to spin and still land
+        Array.from({ length: 6 }, () => sequence).flat().forEach((color, idx) => {
+            const tile = document.createElement('div');
+            tile.className = 'roulette-tile';
+            tile.style.backgroundImage = `url('${images[color]}')`;
+            tile.dataset.idx = idx;
+            tile.dataset.color = color;
+            track.appendChild(tile);
         });
-        track.style.transform = "translateX(0px)";
+        track.style.transform = 'translateX(0px)';
+        this.renderRouletteHistory();
+    },
+
+    renderRouletteHistory() {
+        const list = this.elements.rouletteHistory;
+        if (!list) return;
+        list.innerHTML = '';
+        (window.state.rouletteHistory || []).forEach(result => {
+            const dot = document.createElement('div');
+            const color = result === 'Red' ? 'red' : (result === 'Black' ? 'black' : 'green');
+            dot.className = `dot dot-${color}`;
+            dot.title = result;
+            list.appendChild(dot);
+        });
     },
 
     renderRouletteResult(msg, color, resultType) {
         const el = this.elements;
         const track = document.getElementById('rouletteRail');
         if (el.rouletteResult) {
-            el.rouletteResult.innerText = "SPINNING...";
-            el.rouletteResult.className = `text-xs font-bold uppercase tracking-widest h-4 mb-4 text-violet-400 animate-pulse`;
+            el.rouletteResult.innerText = 'Spinning...';
+            el.rouletteResult.className = 'card result-line text-violet-400';
         }
 
         if (track && resultType) {
-            // Determine target based on resultType (e.g., 'Red', 'Black', 'Green')
-            let targetColorCode = '';
+            const code = resultType === 'Red' ? 'R' : (resultType === 'Black' ? 'B' : 'G');
+            const matches = Array.from(track.children)
+                .slice(0, 15)
+                .map((tile, i) => (tile.dataset.color === code ? i : null))
+                .filter(i => i !== null);
 
-            if (resultType === 'Red') targetColorCode = 'R';
-            else if (resultType === 'Black') targetColorCode = 'B';
-            else if (resultType === '0' || resultType === '00' || resultType === 'Green') targetColorCode = 'G';
+            const itemWidth = 68; // 64px tile plus 2px margin each side
+            const sequenceWidth = 15 * itemWidth;
 
-            const items = track.children;
-            let possibleTargetIndices = [];
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                if (targetColorCode && item.dataset.color === targetColorCode) {
-                    possibleTargetIndices.push(i);
-                }
-            }
-
-            // Updated tile width: w-16 = 64px + 4px mx margins = 68px total width
-            const itemWidth = 68;
-
-            // Start offset is the continuous teleport distance
+            // Jump back by whole sequences so the next spin starts near the front without a visible move
             let startPos = 0;
-            const sequenceWidth = 15 * itemWidth; // 15 tiles per sequence
-            let sequencesToShift = 0;
             if (track.dataset.currentDist !== undefined) {
-                let prevDist = parseFloat(track.dataset.currentDist);
-                // Shift by multiples of full sequences until we are near the front again
-                sequencesToShift = Math.floor(Math.abs(prevDist) / sequenceWidth);
-                startPos = prevDist + (sequencesToShift * sequenceWidth);
+                const previous = parseFloat(track.dataset.currentDist);
+                startPos = previous + Math.floor(Math.abs(previous) / sequenceWidth) * sequenceWidth;
             }
 
-            // To spin forward continuously, the target must be ahead of the startPos
-            // The startPos is near index 0. We want to spin ahead by a few sequences.
-            // Let's target the exact result item in the 4th sequence from the start.
-            const targetSequenceOffset = 3; // Spin 3 full sequences ahead
+            // Land on a matching tile three sequences ahead
+            const base = matches.length ? matches[Math.floor(Math.random() * matches.length)] : 0;
+            const target = base + 3 * 15;
+            const wobble = Math.floor(Math.random() * 40) - 20;
+            const dist = -((target * itemWidth) + wobble) + (track.parentElement.offsetWidth / 2) - itemWidth / 2;
 
-            // Find all indices perfectly matching the color in the base sequence (0-14)
-            let baseIndices = possibleTargetIndices.filter(idx => idx < 15);
-            if (baseIndices.length === 0) baseIndices = [0];
-
-            // Pick a random matching index from the base sequence
-            let randomBaseIdx = baseIndices[Math.floor(Math.random() * baseIndices.length)];
-
-            // The absolute index is the random base index + the sequences we are spinning past
-            let targetIdx = randomBaseIdx + (targetSequenceOffset * 15);
-
-            const randomOffset = Math.floor(Math.random() * 40) - 20;
-            // Center calculation: track parent offset / 2, minus half a tile (34)
-            const dist = -((targetIdx * itemWidth) + randomOffset) + (track.parentElement.offsetWidth / 2) - 34;
-
-            // Trigger reflow to restart animation
+            // Reflow so the animation restarts
             track.classList.remove('is-spinning');
             void track.offsetWidth;
-
             track.style.setProperty('--roulette-start-position', `${startPos}px`);
             track.style.setProperty('--roulette-end-position', `${dist}px`);
             track.dataset.currentDist = dist;
-
-            // Add spinning class
             track.classList.add('is-spinning');
 
-            // Track history
             if (!window.state.rouletteHistory) window.state.rouletteHistory = [];
-
             setTimeout(() => {
                 window.state.rouletteHistory.unshift(resultType);
-                if (window.state.rouletteHistory.length > 20) {
-                    window.state.rouletteHistory.pop();
-                }
-
-                // Update History UI
-                if (el.rouletteHistory) {
-                    el.rouletteHistory.innerHTML = '';
-                    window.state.rouletteHistory.forEach(r => {
-                        const hDiv = document.createElement('div');
-                        hDiv.className = "w-4 h-4 rounded-full flex-shrink-0 shadow-inner";
-                        if (r === 'Red') hDiv.classList.add('bg-red-500');
-                        else if (r === 'Black') hDiv.classList.add('bg-slate-800');
-                        else hDiv.classList.add('bg-emerald-500'); // Green for '0' or '00'
-
-                        el.rouletteHistory.appendChild(hDiv);
-                    });
-                }
+                if (window.state.rouletteHistory.length > 20) window.state.rouletteHistory.pop();
+                this.renderRouletteHistory();
             }, 6000);
-        } else if (track) {
-            this.initRouletteWheel();
-            if (el.rouletteResult) {
-                el.rouletteResult.innerText = "Place your bet";
-                el.rouletteResult.className = `text-xs font-bold uppercase tracking-widest h-4 mb-4 text-slate-300`;
-            }
-            return;
         }
 
         setTimeout(() => {
             if (this.elements.rouletteResult) {
                 this.elements.rouletteResult.innerText = msg;
-                this.elements.rouletteResult.className = `text-xs font-bold uppercase tracking-widest h-4 mb-4 ${color}`;
+                this.elements.rouletteResult.className = `card result-line ${color}`;
             }
         }, 6000);
     },
 
     renderCardSprite(card, isHidden = false, animDelay = 0) {
-        let suitColor = ['♥', '♦'].includes(card.suit) ? 'text-red-500' : 'text-slate-900';
-        if (isHidden) {
-            return `<div class="w-10 h-14 bg-gradient-to-br from-violet-600 to-violet-800 rounded border border-white/20 shadow-md flex items-center justify-center card-anim opacity-0" style="animation-delay: ${animDelay}s">
-                <span class="text-white opacity-50">?</span>
-            </div>`;
-        }
-        return `<div class="w-10 h-14 bg-white rounded border border-slate-300 shadow-md flex flex-col items-center justify-center card-anim py-1 relative opacity-0" style="animation-delay: ${animDelay}s">
-            <span class="text-xs font-bold ${suitColor} absolute top-0.5 left-1">${card.value}</span>
-            <span class="text-xl ${suitColor}">${card.suit}</span>
-        </div>`;
+        const delay = `style="animation-delay: ${animDelay}s"`;
+        if (isHidden) return `<div class="playing-card back card-anim" ${delay}>?</div>`;
+        const red = ['♥', '♦'].includes(card.suit) ? 'red' : '';
+        return `<div class="playing-card card-anim ${red}" ${delay}><span>${card.value}</span><span>${card.suit}</span></div>`;
     },
 
     renderBlackjack() {
@@ -819,168 +610,542 @@ const ui = {
         if (!el.bjTable) return;
 
         const bj = window.state.blackjack;
+        const showResult = (text, tone) => {
+            el.bjResult.innerText = text;
+            el.bjResult.className = `card result-line ${tone}`;
+        };
+        // The bet is locked once the cards are out
+        el.bjBetContainer?.classList[bj.active ? 'add' : 'remove']('hidden');
+        el.bjControlsDeal.classList[bj.active ? 'add' : 'remove']('hidden');
+        el.bjControlsPlay.classList[bj.active ? 'remove' : 'add']('hidden');
+
         if (!bj.active && bj.playerHand.length === 0) {
             el.bjTable.classList.add('hidden');
-            el.bjControlsDeal.classList.remove('hidden');
-            el.bjControlsPlay.classList.add('hidden');
-            el.bjResult.innerText = 'Bet $1,000';
-            el.bjResult.className = 'text-xs font-bold uppercase tracking-widest h-4 mb-4 text-center text-slate-300';
+            showResult('Place your bet', 'text-slate-300');
             return;
         }
 
         el.bjTable.classList.remove('hidden');
+        if (el.bjStake) el.bjStake.innerText = `Bet $${(bj.bet || 0).toLocaleString()}`;
+
         if (bj.active) {
-            el.bjControlsDeal.classList.add('hidden');
-            el.bjControlsPlay.classList.remove('hidden');
             el.bjDealerHand.innerHTML = this.renderCardSprite(bj.dealerHand[0], false, 0) + this.renderCardSprite({}, true, 0.2);
             el.bjDealerScore.innerText = '?';
+            showResult('Hit or stand', 'text-slate-300');
         } else {
-            el.bjControlsDeal.classList.remove('hidden');
-            el.bjControlsPlay.classList.add('hidden');
             el.bjDealerHand.innerHTML = bj.dealerHand.map((c, i) => this.renderCardSprite(c, false, i * 0.1)).join('');
             el.bjDealerScore.innerText = window.logic.calcHand(bj.dealerHand);
 
-            el.bjResult.innerText = bj.status;
-            let resColor = 'text-slate-300';
-            if (bj.status.includes('Win') || bj.status.includes('BLACKJACK')) resColor = 'text-emerald-400';
-            if (bj.status.includes('Lost') || bj.status.includes('Bust')) resColor = 'text-red-400';
-            if (bj.status.includes('Push')) resColor = 'text-amber-400';
-            el.bjResult.className = `text-xs font-bold uppercase tracking-widest h-4 mb-4 text-center ${resColor}`;
+            let tone = 'text-slate-300';
+            if (bj.status.includes('Win') || bj.status.includes('BLACKJACK')) tone = 'text-emerald-400';
+            if (bj.status.includes('Lost') || bj.status.includes('Bust')) tone = 'text-red-400';
+            if (bj.status.includes('Push')) tone = 'text-amber-400';
+            showResult(bj.status, tone);
         }
 
         el.bjPlayerHand.innerHTML = bj.playerHand.map((c, i) => this.renderCardSprite(c, false, i * 0.1)).join('');
         el.bjPlayerScore.innerText = window.logic.calcHand(bj.playerHand);
     },
 
+    renderOwnedBusiness(b, biz, idx) {
+        const level = biz.level || 1;
+        const upgradeCost = window.logic.getBusinessUpgradeCost(biz);
+        const canUpgrade = window.state.balance >= upgradeCost;
+        const milestone = window.logic.getMilestone(level);
+        const progress = b.maxLevel ? level / b.maxLevel : milestone.progress;
+        const goal = b.maxLevel
+            ? `<span>Level ${level} of ${b.maxLevel}</span><strong></strong>`
+            : `<span>${milestone.next ? `Double income at level ${milestone.next}` : 'All income bonuses unlocked'}</span>
+                <strong>${milestone.multiplier > 1 ? `x${milestone.multiplier} bonus` : ''}</strong>`;
+        const upgrade = window.logic.isMaxLevel(biz)
+            ? '<p class="maxed">Fully upgraded</p>'
+            : `<button id="bizUpgradeBtn-${idx}" class="btn btn-green wide ${canUpgrade ? '' : 'is-short'}"
+                    onclick="window.logic.upgradeBusiness(${idx})">Upgrade for ${this.formatMoney(upgradeCost)}</button>`;
+        const perSecond = (biz.incomePerHour / 3600) * window.logic.getPrestigeMultiplier();
+        const collectRow = window.logic.hasManager(b.id)
+            ? `<p class="muted">Your manager collects this for you</p>`
+            : `<div class="row between">
+                    <div><span class="muted">Ready to collect</span>
+                        <strong id="bizAccumulatedIdx-${idx}" class="stat-figure text-emerald-400">${this.formatMoney(biz.accumulated || 0)}</strong></div>
+                    <button id="bizCollectBtnIdx-${idx}" class="btn btn-yellow" ${(biz.accumulated || 0) <= 0 ? 'disabled' : ''}
+                        onclick="window.logic.collectIncomeByIndex(${idx}); window.threeEffects && window.threeEffects.triggerClickPulse(event.clientX, event.clientY);">Collect</button>
+                </div>`;
+
+        return `
+        <article id="bizOwned-${idx}" class="card biz">
+            <div class="row">
+                <span class="tile">${this.icon(BUSINESS_ICONS[b.id])}</span>
+                <div class="grow"><h3>${b.name}</h3><span class="muted">Level ${biz.level || 1}</span></div>
+                <span class="figure" id="bizRateIdx-${idx}">+${this.formatMoney(perSecond)}<small>/s</small></span>
+            </div>
+            <div class="meter"><div style="width: ${progress * 100}%"></div></div>
+            <p class="row between muted">${goal}</p>
+            ${upgrade}
+            ${collectRow}
+        </article>`;
+    },
+
+    renderManagerOffer(b) {
+        const cost = window.logic.getManagerCost(b.id);
+        return `
+        <div class="card row">
+            <span class="tile">${this.icon('user')}</span>
+            <div class="grow"><h3>Hire a manager</h3><span class="muted">Collects ${b.name} income for you</span></div>
+            <button id="managerBtn-${b.id}" class="btn btn-yellow" onclick="window.logic.buyManager('${b.id}')"
+                ${window.state.balance < cost ? 'disabled' : ''}>${this.formatMoney(cost)}</button>
+        </div>`;
+    },
+
+    renderBusinessPlan(b, count) {
+        const cost = window.logic.getBusinessCost(b.id);
+        return `
+        <article id="bizBtn-${b.id}" class="card biz biz-plan">
+            <div class="row">
+                <span class="tile">${this.icon(BUSINESS_ICONS[b.id])}</span>
+                <div class="grow"><h3>${b.name}</h3>
+                    <span class="muted">Earns ${this.formatMoney(b.income)} a second</span>
+                    <span class="muted">You own ${count} of ${b.maxOwn}</span></div>
+                <button id="bizBuyBtn-${b.id}" class="btn btn-yellow ${window.state.balance >= cost ? '' : 'is-short'}"
+                    onclick="window.logic.buyBusiness('${b.id}')">Buy<small>${this.formatMoney(cost)}</small></button>
+            </div>
+        </article>`;
+    },
+
+    // ---- Vault: dashboard and business screens ----
+
+    // ---- The game's own confirm box ----
+
+    ask({ title, message, yes, danger = false }, action) {
+        const el = this.elements;
+        this.pendingAction = action;
+        el.confirmTitle.innerText = title;
+        el.confirmMessage.innerText = message;
+        el.confirmYes.innerText = yes;
+        el.confirmYes.className = `btn btn-big ${danger ? 'btn-red' : 'btn-yellow'}`;
+        el.confirmModal.classList.remove('hidden');
+        // Nothing behind the box can be reached while it is open
+        el.behindDialog?.forEach(part => { part.inert = true; });
+        el.confirmNo.focus?.(); // the safe choice
+    },
+
+    answer(agreed) {
+        const el = this.elements;
+        const action = this.pendingAction;
+        if (!action) return;
+        this.pendingAction = null; // cleared first, so a double tap cannot run it twice
+        el.confirmModal.classList.add('hidden');
+        el.behindDialog?.forEach(part => { part.inert = false; });
+        if (agreed) action();
+    },
+
+    isDealerOpen() {
+        return window.state.activeTab === 'vault' && this.businessScreen === 'dealer';
+    },
+
+    showBusiness(screen) {
+        const el = this.elements;
+        // Without a license the dealership is still something to start
+        if (screen === 'dealer' && !window.state.hasDealerLicense) screen = 'start';
+        if (screen === 'dealer') window.logic.updateCarDemand();
+        this.businessScreen = screen;
+        el.app?.classList[screen ? 'add' : 'remove']('playing');
+        el.btnHeaderBack?.classList[screen ? 'remove' : 'add']('hidden');
+        if (el.headerTitle) el.headerTitle.innerText = this.getBusinessTitle(screen);
+        this.renderBusinesses();
+        if (el.vaultView) el.vaultView.scrollTop = 0;
+    },
+
+    goBack() {
+        if (window.state.activeTab === 'casino') this.showCasinoLobby();
+        else this.showBusiness(null);
+    },
+
+    getBusinessTitle(screen) {
+        if (!screen) return SCREEN_TITLES.vault;
+        if (screen === 'start') return 'Start a business';
+        if (screen === 'taxi') return 'Taxi Company';
+        if (screen === 'dealer') return 'Car Dealership';
+        return window.BUSINESS_DATA.find(b => b.id === screen).name;
+    },
+
+    getOwned(id) {
+        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
+        return businesses.map((biz, idx) => ({ biz, idx })).filter(o => o.biz.id === id);
+    },
+
+    // What each dashboard card says about its business
+    getBusinessSummaries() {
+        const l = window.logic;
+        const summaries = window.BUSINESS_DATA.filter(b => this.getOwned(b.id).length).map(b => {
+            const owned = this.getOwned(b.id);
+            const ready = owned.reduce((sum, o) => sum + (o.biz.accumulated || 0), 0);
+            let status = ready > 0 ? `${this.formatMoney(ready)} ready to collect` : 'Earning';
+            if (l.hasManager(b.id)) status = 'Manager collecting';
+            const noun = b.id === 'retail' ? 'shop' : 'owned';
+            const plural = b.id === 'retail' && owned.length > 1 ? 's' : '';
+            return {
+                id: b.id,
+                name: b.name,
+                icon: BUSINESS_ICONS[b.id],
+                count: `${owned.length} ${noun}${plural}`,
+                rate: owned.reduce((sum, o) => sum + o.biz.incomePerHour / 3600, 0) * l.getPrestigeMultiplier(),
+                status,
+                alert: false
+            };
+        });
+
+        const taxi = window.state.taxi;
+        if (taxi) {
+            const broken = taxi.cars.filter(c => c.broken).length;
+            let status = taxi.dispatcher ? 'Dispatcher collecting' : `${this.formatMoney(taxi.fares)} in fares`;
+            if (!taxi.cars.length && !(taxi.fares > 0)) status = 'Buy a car to start earning';
+            if (broken) status = `${broken} broken down`;
+            summaries.push({
+                id: 'taxi',
+                name: 'Taxi Company',
+                icon: 'car',
+                count: `${taxi.cars.length} car${taxi.cars.length === 1 ? '' : 's'}`,
+                rate: l.getTaxiRate(),
+                status,
+                alert: broken > 0
+            });
+        }
+
+        if (window.state.hasDealerLicense) {
+            const cars = window.state.dealerCars || [];
+            const count = status => cars.filter(c => c.status === status).length;
+            let status = 'Visit the auction';
+            if (count('restoring')) status = `${count('restoring')} restoring`;
+            if (count('ready')) status = `${count('ready')} ready to sell`;
+            if (count('needs_repair')) status = `${count('needs_repair')} need repair`;
+            summaries.push({
+                id: 'dealer',
+                name: 'Car Dealership',
+                icon: 'truck',
+                count: 'Auctions and garage',
+                figure: `${cars.length}<small>/${l.getGarageSlots()} cars</small>`,
+                status,
+                alert: count('needs_repair') > 0
+            });
+        }
+        return summaries;
+    },
+
+    // Dashboard cards show earnings per second, or their own figure
+    getSummaryFigure(summary) {
+        return summary.figure || `+${this.formatMoney(summary.rate)}<small>/s</small>`;
+    },
+
+    renderDashboard(summaries) {
+        if (!summaries.length) {
+            return `<div class="empty">${this.icon('store')}<strong>You do not own a business yet</strong><span>Use Start a business to open one</span></div>`;
+        }
+        return summaries.map(s => `
+            <button class="btn summary" onclick="window.ui.showBusiness('${s.id}')">
+                <span class="tile">${this.icon(s.icon)}</span>
+                <span class="grow"><strong>${s.name}</strong>
+                    <small>${s.count}</small>
+                    <small id="sumStatus-${s.id}" class="${s.alert ? 'text-red-400' : ''}">${s.status}</small></span>
+                <span class="figure" id="sumRate-${s.id}">${this.getSummaryFigure(s)}</span>
+                ${this.icon('chevron')}
+            </button>`).join('');
+    },
+
     renderBusinesses() {
         const el = this.elements;
         if (!el.businessesList) return;
+        const screen = this.businessScreen;
 
-        let html = '';
-        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
-        let totalActive = businesses.length || window.state.retailStores || 0;
+        const dealer = screen === 'dealer';
+        el.vaultHome?.classList[screen ? 'add' : 'remove']('hidden');
+        el.businessDetail?.classList[screen && !dealer ? 'remove' : 'add']('hidden');
+        el.marketContent?.classList[dealer ? 'remove' : 'add']('hidden');
 
-        window.BUSINESS_DATA.forEach(b => {
-            const ownedInstances = businesses.filter(biz => biz.id === b.id).map((biz, idx) => ({ biz, idx: businesses.indexOf(biz) }));
-            let count = ownedInstances.length;
-            if (b.id === 'retail' && count === 0 && window.state.retailStores > 0) count = window.state.retailStores || 0;
+        const summaries = this.getBusinessSummaries();
+        el.businessesList.innerHTML = this.renderDashboard(summaries);
+        if (el.storeCountDisplay) el.storeCountDisplay.innerText = `${summaries.length} Active`;
 
-            // Render Owned Instances
-            ownedInstances.forEach(({biz, idx}) => {
-                const upgradeCost = window.logic.getBusinessUpgradeCost(biz);
-                const canUpgrade = window.state.balance >= upgradeCost;
-
-                html += `
-                <div id="bizOwned-${idx}" class="w-full text-left bg-slate-850 border border-slate-700 p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden flex flex-col gap-4 shadow-[0_4px_20px_-5px_rgba(245,158,11,0.15)] border-l-4 border-l-amber-500">
-                    <div class="flex justify-between items-start relative z-10 w-full">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-slate-700/80 shadow-inner">
-                                ${b.icon}
-                            </div>
-                            <div class="flex flex-col">
-                                <h3 class="text-white font-bold text-base">
-                                    ${b.name} <span class="text-amber-400 text-[10px] uppercase font-bold tracking-widest ml-2 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">⭐ Lvl ${biz.level || 1}</span>
-                                </h3>
-                                <p class="text-emerald-400 text-xs font-semibold mt-1" id="bizRateIdx-${idx}">+$${(biz.incomePerHour / 3600).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})} /sec</p>
-                            </div>
-                        </div>
-                        <button onclick="window.logic.upgradeBusiness(${idx}); event.stopPropagation();" id="bizUpgradeBtn-${idx}" class="flex flex-col items-end transition-opacity duration-300 ${!canUpgrade ? 'opacity-40 cursor-not-allowed' : 'hover:scale-105 active:scale-95 cursor-pointer'}">
-                            <span class="text-amber-400 font-bold text-lg tracking-tight">${this.formatMoney(upgradeCost)}</span>
-                            <span class="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest ${canUpgrade ? 'text-amber-500' : ''}">Upgrade</span>
-                        </button>
-                    </div>
-
-                    <div class="w-full relative z-10 pt-3 mt-2 border-t border-slate-700/50 flex justify-between items-center">
-                        <div class="flex flex-col">
-                            <span class="text-slate-500 text-[9px] font-bold uppercase tracking-widest">Vault Ready</span>
-                            <span id="bizAccumulatedIdx-${idx}" class="text-emerald-400 font-mono font-bold text-sm">${this.formatMoney(biz.accumulated || 0)}</span>
-                        </div>
-                        <button onclick="event.stopPropagation(); window.logic.collectIncomeByIndex(${idx}); window.threeEffects && window.threeEffects.triggerClickPulse(event.clientX, event.clientY);" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors z-20 relative disabled:opacity-50 disabled:cursor-not-allowed" ${(biz.accumulated || 0) <= 0 ? 'disabled' : ''} id="bizCollectBtnIdx-${idx}">
-                            Collect
-                        </button>
-                    </div>
-                </div>
-                `;
-            });
-
-            // Render Blueprint if limits allow
-            const isMaxed = b.maxOwn && count >= b.maxOwn;
-            if (!isMaxed) {
-                const cost = window.logic.getBusinessCost(b.id);
-                const canAfford = window.state.balance >= cost;
-                html += `
-                <div id="bizBtn-${b.id}" onclick="window.logic.buyBusiness('${b.id}')"
-                    class="w-full text-left bg-slate-900 border border-slate-800 border-dashed p-4 rounded-2xl transition-all duration-200 group relative overflow-hidden flex flex-col gap-4 hover:border-slate-600 hover:bg-slate-800 shadow-lg cursor-pointer opacity-80 hover:opacity-100">
-                    <div class="flex justify-between items-start relative z-10 w-full">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center text-2xl border border-slate-700/80 shadow-inner opacity-70 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                                ${b.icon}
-                            </div>
-                            <div class="flex flex-col">
-                                <h3 class="text-slate-400 font-bold text-base group-hover:text-white transition-colors">
-                                    ${b.name} <span class="text-xs text-slate-500 font-mono ml-1 uppercase bg-slate-800 px-1 py-0.5 rounded">Blueprint</span>
-                                </h3>
-                                <p class="text-slate-500 text-xs font-semibold mt-0.5" id="bizRate-${b.id}">Base: +$${b.income.toLocaleString()} /sec</p>
-                            </div>
-                        </div>
-                        <div id="bizCostArea-${b.id}" class="flex flex-col items-end transition-opacity duration-300 ${!canAfford ? 'opacity-40' : ''}">
-                            <span class="text-white font-bold text-lg tracking-tight">${this.formatMoney(cost)}</span>
-                            <span id="bizAcquireText-${b.id}" class="text-slate-500 text-[10px] mt-1 font-bold uppercase tracking-widest transition-colors ${canAfford ? 'group-hover:text-amber-400' : ''}">
-                                Acquire (${count} / ${b.maxOwn || '∞'})
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                `;
-            }
-        });
-
-        el.businessesList.innerHTML = html;
-        if (el.storeCountDisplay) el.storeCountDisplay.innerText = `${totalActive} Active`;
+        if (dealer) {
+            this.renderGarage();
+            this.renderAuction();
+            return;
+        }
+        if (!screen || !el.businessDetail) return;
+        if (screen === 'start') el.businessDetail.innerHTML = this.renderStartScreen();
+        else if (screen === 'taxi') el.businessDetail.innerHTML = this.renderTaxiScreen();
+        else el.businessDetail.innerHTML = this.renderBusinessScreen(screen);
     },
 
-    updateBusinessProgressBars(percent) {
-        const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
-        window.BUSINESS_DATA.forEach(b => {
-            const bar = document.getElementById(`bizProgress-${b.id}`);
+    renderBusinessScreen(id) {
+        const b = window.BUSINESS_DATA.find(x => x.id === id);
+        const owned = this.getOwned(id);
+        let html = owned.map(({ biz, idx }) => this.renderOwnedBusiness(b, biz, idx)).join('');
+        if (owned.length && !window.logic.hasManager(id)) html += this.renderManagerOffer(b);
+        if (!b.hidden && owned.length < b.maxOwn) html += this.renderBusinessPlan(b, owned.length);
+        return html;
+    },
+
+    // Buying from the start screen takes you to the new business
+    startBusiness(id) {
+        if (id === 'dealer') {
+            window.logic.buyLicense(); // opens the dealership when it succeeds
+            return;
+        }
+        if (id === 'taxi') {
+            window.logic.openTaxiCompany();
+            if (window.state.taxi) this.showBusiness('taxi');
+            return;
+        }
+        const before = this.getOwned(id).length;
+        window.logic.buyBusiness(id);
+        if (this.getOwned(id).length > before) this.showBusiness(id);
+    },
+
+    renderStartScreen() {
+        const l = window.logic;
+        const shop = window.BUSINESS_DATA.find(b => b.id === 'retail');
+        const shops = this.getOwned('retail').length;
+        const shopCost = l.getBusinessCost('retail');
+        const button = (id, short, action, label) =>
+            `<button id="${id}" class="btn btn-yellow btn-big wide ${short ? 'is-short' : ''}" onclick="${action}">${label}</button>`;
+
+        const shopButton = shops < shop.maxOwn
+            ? button('startRetail', window.state.balance < shopCost, "window.ui.startBusiness('retail')", `Open a shop for ${this.formatMoney(shopCost)}`)
+            : button('startRetail', false, "window.ui.showBusiness('retail')", 'Manage your shops');
+        const taxiButton = window.state.taxi
+            ? button('startTaxi', false, "window.ui.showBusiness('taxi')", 'Manage your taxis')
+            : button('startTaxi', window.state.balance < l.getTaxiOpenCost(), "window.ui.startBusiness('taxi')", `Open for ${this.formatMoney(l.getTaxiOpenCost())}`);
+
+        const dealerButton = window.state.hasDealerLicense
+            ? button('startDealer', false, "window.ui.showBusiness('dealer')", 'Manage your dealership')
+            : button('startDealer', window.state.balance < l.getLicenseCost(), "window.ui.startBusiness('dealer')", `Open for ${this.formatMoney(l.getLicenseCost())}`);
+
+        return `
+        <article class="card stack">
+            <div class="row"><span class="tile">${this.icon('store')}</span>
+                <div class="grow"><h3>${shop.name}</h3><span class="muted">A steady start. You own ${shops} of ${shop.maxOwn}.</span></div></div>
+            <p>Each shop earns up to ${this.formatMoney(shop.income * shop.maxLevel)} a second at level ${shop.maxLevel}.</p>
+            ${shopButton}
+        </article>
+        <article class="card stack">
+            <img class="car-photo" src="Assets/cars-web/coupe-1994.jpg" alt="A burgundy coupe" width="640" height="429">
+            <div class="row"><span class="tile">${this.icon('truck')}</span>
+                <div class="grow"><h3>Car Dealership</h3><span class="muted">${window.state.hasDealerLicense ? 'Open' : 'Trade cars for profit'}</span></div></div>
+            <p>Buy cars at auction, restore them and sell when demand is high.</p>
+            ${dealerButton}
+        </article>
+        <article class="card stack">
+            <img class="car-photo" src="Assets/cars-web/taxi-sedan.jpg" alt="A silver taxi sedan" width="640" height="429">
+            <div class="row"><span class="tile">${this.icon('car')}</span>
+                <div class="grow"><h3>Taxi Company</h3><span class="muted">${window.state.taxi ? 'Open' : 'Hands-on, with bigger earnings'}</span></div></div>
+            <p>Buy cars and keep them running. They wear out, break down and need replacing.</p>
+            ${taxiButton}
+        </article>`;
+    },
+
+    formatKm(km) {
+        return Math.floor(km).toLocaleString('en-US');
+    },
+
+    getTaxiPhoto(type) {
+        return `Assets/cars-web/taxi-${type.id}.jpg`;
+    },
+
+    renderTaxiCar(car) {
+        const l = window.logic;
+        const type = l.getTaxiType(car.type);
+        const worn = car.km / type.maxKm;
+        return `
+        <article class="card car">
+            <img class="car-photo" src="${this.getTaxiPhoto(type)}" alt="${type.name}" width="640" height="429">
+            <div class="row">
+                <div class="grow"><h3>${type.name}</h3><span class="tag">${type.label}</span></div>
+                ${car.broken
+                    ? '<strong class="text-red-400">Broken down</strong>'
+                    : `<span class="figure">+${this.formatMoney(type.perSecond * l.getPrestigeMultiplier())}<small>/s</small></span>`}
+            </div>
+            <div class="meter wear ${worn > 0.85 ? 'worn' : ''}"><div id="taxiBar-${car.id}" style="width: ${worn * 100}%"></div></div>
+            <p class="row between"><span class="muted">Driven</span>
+                <strong id="taxiKm-${car.id}">${this.formatKm(car.km)} / ${this.formatKm(type.maxKm)} km</strong></p>
+            ${car.broken
+                ? `<button id="repairTaxi-${car.id}" class="btn btn-red wide" onclick="window.logic.repairTaxi(${car.id})"
+                        ${window.state.balance < l.getTaxiRepairCost(car) ? 'disabled' : ''}>Repair for ${this.formatMoney(l.getTaxiRepairCost(car))}</button>`
+                : ''}
+            <button id="sellTaxi-${car.id}" class="btn wide" onclick="window.logic.sellTaxi(${car.id})">Sell for ${this.formatMoney(l.getTaxiSellValue(car))}</button>
+        </article>`;
+    },
+
+    renderTaxiScreen() {
+        const l = window.logic;
+        const taxi = window.state.taxi;
+        if (!taxi) return this.renderStartScreen();
+        const full = taxi.cars.length >= taxi.spaces;
+
+        const fares = taxi.dispatcher
+            ? '<div class="card"><p class="muted">Your dispatcher collects fares for you</p></div>'
+            : `<div class="card row between">
+                    <div><span class="muted">Fares ready</span><strong id="taxiFares" class="stat-figure text-emerald-400">${this.formatMoney(taxi.fares)}</strong></div>
+                    <button id="btnCollectFares" class="btn btn-yellow" onclick="window.logic.collectFares()" ${taxi.fares > 0 ? '' : 'disabled'}>Collect</button>
+                </div>
+                <div class="card row">
+                    <span class="tile">${this.icon('user')}</span>
+                    <div class="grow"><h3>Hire a dispatcher</h3><span class="muted">Collects fares for you</span></div>
+                    <button id="btnDispatcher" class="btn btn-yellow" onclick="window.logic.hireDispatcher()"
+                        ${window.state.balance < l.getDispatcherCost() ? 'disabled' : ''}>${this.formatMoney(l.getDispatcherCost())}</button>
+                </div>`;
+
+        const cars = taxi.cars.length
+            ? taxi.cars.map(car => this.renderTaxiCar(car)).join('')
+            : `<div class="empty">${this.icon('car')}<strong>No cars yet</strong><span>Buy one below to start earning</span></div>`;
+
+        const showroom = window.TAXI_CARS.map(type => `
+            <article class="card car">
+                <img class="car-photo" src="${this.getTaxiPhoto(type)}" alt="${type.name}" width="640" height="429">
+                <div class="row">
+                    <div class="grow"><h3>${type.name}</h3><span class="tag">${type.label}</span></div>
+                    <span class="figure">+${this.formatMoney(type.perSecond * l.getPrestigeMultiplier())}<small>/s</small></span>
+                </div>
+                <p class="row between"><span class="muted">Scrapped at</span><strong>${this.formatKm(type.maxKm)} km</strong></p>
+                <p class="row between"><span class="muted">Lasts about</span><strong>${Math.round(type.maxKm / 12500)} minutes of play</strong></p>
+                <p class="row between"><span class="muted">Breakdowns</span><strong>${type.breakdowns}</strong></p>
+                <button id="buyTaxi-${type.id}" class="btn btn-yellow btn-big wide" onclick="window.logic.buyTaxi('${type.id}')"
+                    ${full || window.state.balance < type.price ? 'disabled' : ''}>${full ? 'Fleet full' : `Buy for ${this.formatMoney(type.price)}`}</button>
+            </article>`).join('');
+
+        return `
+            <div class="section-head">
+                <h2>Your fleet</h2>
+                <span class="pill">${taxi.cars.length}/${taxi.spaces} Spaces</span>
+                ${l.canExpandFleet()
+                    ? `<button id="btnExpandFleet" class="btn btn-small" onclick="window.logic.expandTaxiFleet()"
+                            ${window.state.balance < l.getTaxiSpaceCost() ? 'disabled' : ''}>Add space (${this.formatMoney(l.getTaxiSpaceCost())})</button>`
+                    : ''}
+            </div>
+            ${fares}
+            ${cars}
+            <div class="section-head"><h2>Buy a taxi</h2></div>
+            ${showroom}`;
+    },
+
+    // Live figures on whichever Vault screen is open
+    syncBusinessScreen() {
+        const l = window.logic;
+        const byId = id => document.getElementById(id);
+        const setText = (id, text) => { const node = byId(id); if (node) node.innerText = text; };
+        const setDisabled = (id, disabled) => { const node = byId(id); if (node) node.disabled = disabled; };
+        const balance = window.state.balance;
+
+        if (!this.businessScreen) {
+            this.getBusinessSummaries().forEach(s => {
+                setText(`sumStatus-${s.id}`, s.status);
+                const rate = byId(`sumRate-${s.id}`);
+                if (rate) rate.innerHTML = this.getSummaryFigure(s);
+            });
+            return;
+        }
+
+        const taxi = window.state.taxi;
+        if (this.businessScreen !== 'taxi' || !taxi) return;
+        setText('taxiFares', this.formatMoney(taxi.fares));
+        setDisabled('btnCollectFares', !(taxi.fares > 0));
+        setDisabled('btnDispatcher', balance < l.getDispatcherCost());
+        setDisabled('btnExpandFleet', balance < l.getTaxiSpaceCost());
+        window.TAXI_CARS.forEach(type => setDisabled(`buyTaxi-${type.id}`, taxi.cars.length >= taxi.spaces || balance < type.price));
+        taxi.cars.forEach(car => {
+            const type = l.getTaxiType(car.type);
+            setText(`taxiKm-${car.id}`, `${this.formatKm(car.km)} / ${this.formatKm(type.maxKm)} km`);
+            const bar = byId(`taxiBar-${car.id}`);
             if (bar) {
-                let count = businesses.filter(biz => biz.id === b.id).length;
-                if (b.id === 'retail' && count === 0 && window.state.retailStores > 0) count = window.state.retailStores || 0;
-                
-                if (count > 0) {
-                    bar.style.width = `${percent}%`;
-                } else {
-                    bar.style.width = `0%`;
-                }
+                bar.style.width = `${car.km / type.maxKm * 100}%`;
+                bar.parentElement.classList[car.km / type.maxKm > 0.85 ? 'add' : 'remove']('worn');
             }
+            setDisabled(`repairTaxi-${car.id}`, balance < l.getTaxiRepairCost(car));
+            setText(`sellTaxi-${car.id}`, `Sell for ${this.formatMoney(l.getTaxiSellValue(car))}`);
         });
+    },
+
+    getLifestylePhoto(item) {
+        return `Assets/lifestyle-web/${item.id}.jpg`;
+    },
+
+    renderLifestylePhoto(item, className = '') {
+        return `<img ${className ? `class="${className}"` : ''} src="${this.getLifestylePhoto(item)}" alt="${item.name}" width="640" height="429" loading="lazy" decoding="async">`;
+    },
+
+    renderLifestyle() {
+        const el = this.elements;
+        if (!el.lifestyleContent) return;
+
+        const owned = window.state.lifestyle || {};
+        const level = window.logic.getLifestyleLevel();
+        const collection = window.LIFESTYLE_ITEMS.filter(item => owned[item.id]);
+
+        const shop = [...new Set(window.LIFESTYLE_ITEMS.map(item => item.type))].map(type => `
+            <section class="stack">
+                <div class="section-head"><h2>${type}</h2></div>
+                ${window.LIFESTYLE_ITEMS.filter(item => item.type === type).map(item => {
+                    const have = owned[item.id] || 0;
+                    const action = have && !item.repeatable
+                        ? '<span class="pill pill-owned">Owned</span>'
+                        : `<button id="lifeBuy-${item.id}" class="btn btn-yellow ${window.state.balance < item.price ? 'is-short' : ''}"
+                                onclick="window.logic.buyLifestyle('${item.id}')">${have ? 'Again' : 'Buy'}<small>${this.formatMoney(item.price)}</small></button>`;
+                    return `<article class="card car">
+                        ${this.renderLifestylePhoto(item, 'item-photo')}
+                        <div class="row">
+                            <div class="grow"><h3>${item.name}</h3></div>
+                            ${action}
+                        </div>
+                    </article>`;
+                }).join('')}
+            </section>`).join('');
+
+        el.lifestyleContent.innerHTML = `
+            <div class="card rank-card">
+                <span class="badge-icon badge-yellow">${this.icon('gem')}</span>
+                <h2>${level.name}</h2>
+                <div class="meter"><div style="width: ${Math.round(level.progress * 100)}%"></div></div>
+                <p class="note">${level.next ? `Spend ${this.formatMoney(level.remaining)} more to reach ${level.next}` : 'You have reached the top'}</p>
+            </div>
+            <section class="stack">
+                <div class="section-head"><h2>Your life</h2></div>
+                ${collection.length
+                    ? `<div class="collection">${collection.map(item => `
+                            <div class="owned">${this.renderLifestylePhoto(item)}<strong>${item.name}</strong>${owned[item.id] > 1 ? `<small>${owned[item.id]} times</small>` : ''}</div>`).join('')}</div>`
+                    : `<div class="empty">${this.icon('gem')}<strong>Nothing in your collection yet</strong><span>Treat yourself below</span></div>`}
+            </section>
+            ${shop}`;
     },
 
     renderProfile() {
         const el = this.elements;
         if (!el.statRank) return;
 
-        let rankText = window.state.rank || 'Novice Hustler';
-        if (window.state.prestigeCount > 0) {
-            rankText = `[Prestige ${window.state.prestigeCount}] ` + rankText;
-            document.getElementById('statRank')?.classList.replace('text-white', 'text-amber-400');
-        }
-        el.statRank.innerText = rankText;
+        const prestige = window.state.prestigeCount || 0;
+        const rank = window.state.rank || 'Novice Hustler';
+        el.statRank.innerText = prestige > 0 ? `[Prestige ${prestige}] ${rank}` : rank;
+        el.statRank.classList[prestige > 0 ? 'add' : 'remove']('prestiged');
         el.statTotalEarnings.innerText = this.formatMoney(window.state.lifetimeEarnings || 0);
         el.statTotalClicks.innerText = window.state.totalClicks || 0;
 
-        const cpl = window.state.casinoProfitLoss || 0;
-        if (el.statCasinoPL) {
-            el.statCasinoPL.innerText = cpl >= 0 ? `+${this.formatMoney(cpl)}` : `-${this.formatMoney(Math.abs(cpl))}`;
-            el.statCasinoPL.className = cpl >= 0 ? 'font-mono text-emerald-400 font-bold' : 'font-mono text-red-400 font-bold';
+        if (el.rankProgressBar) {
+            const { next, remaining, progress } = window.logic.getRankProgress();
+            el.rankProgressBar.style.width = `${Math.round(progress * 100)}%`;
+            el.rankProgressText.innerText = next ? `${this.formatMoney(remaining)} to ${next}` : 'Top rank reached';
         }
 
-        if (el.prestigeContainer) {
-            if (window.state.lifetimeEarnings >= 1000000 || window.state.prestigeCount > 0) {
-                el.prestigeContainer.classList.remove('hidden');
-            } else {
-                el.prestigeContainer.classList.add('hidden');
-            }
+        const casino = window.state.casinoProfitLoss || 0;
+        if (el.statCasinoPL) {
+            el.statCasinoPL.innerText = `${casino >= 0 ? '+' : '-'}${this.formatMoney(Math.abs(casino))}`;
+            el.statCasinoPL.className = `stat-figure ${casino >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+        }
+
+        if (el.prestigeBtn) {
+            const remaining = window.logic.getPrestigeRemaining();
+            const bonus = (prestige + 1) * 10;
+            el.prestigeBtn.disabled = remaining > 0;
+            el.prestigeInfo.innerText = remaining > 0
+                ? `Earn ${this.formatMoney(remaining)} more to unlock a restart with a permanent +${bonus}% income bonus.`
+                : `Restart with a permanent +${bonus}% income bonus. You lose your money, businesses, stocks and cars.`;
         }
     },
 
@@ -989,190 +1154,184 @@ const ui = {
         if (window.state.activeTab === 'invest') this.renderMarket();
     },
 
+    formatDuration(ms) {
+        const minutes = Math.floor(ms / 60000);
+        const hours = Math.floor(minutes / 60);
+        return hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
+    },
+
+    renderAwayModal() {
+        const el = this.elements;
+        if (!el.awayModal) return;
+        const away = window.state.away;
+        if (!away) {
+            el.awayModal.classList.add('hidden');
+            return;
+        }
+        el.awayAmount.innerText = this.formatMoney(away.amount);
+        el.awayDuration.innerText = this.formatDuration(away.ms);
+        el.awayModal.classList.remove('hidden');
+    },
+
+    // Runs every frame: updates figures and button states without rebuilding anything
     syncVisualsSilently() {
         const el = this.elements;
         const l = window.logic;
+        const byId = id => document.getElementById(id);
+        const markShort = (button, short) => button?.classList[short ? 'add' : 'remove']('is-short');
+
+        this.renderAwayModal();
 
         if (el.balanceDisplay) el.balanceDisplay.innerText = this.formatMoney(window.state.balance);
-        if (el.passiveIncomeDisplay) el.passiveIncomeDisplay.innerText = '+' + this.formatMoney(l.getPassiveIncome()) + ' /s';
+        if (el.passiveIncomeDisplay) el.passiveIncomeDisplay.innerText = `+${this.formatMoney(l.getPassiveIncome())} per second`;
 
-        // Re-render complex states only when needed, not on every frame
-        // Dynamically toggle business buttons based on balance
         if (window.state.activeTab === 'vault') {
             const businesses = Array.isArray(window.state.businesses) ? window.state.businesses : [];
-            
-            // Sync Owned Instances
             businesses.forEach((biz, idx) => {
-                const upgradeBtn = document.getElementById(`bizUpgradeBtn-${idx}`);
-                if (upgradeBtn) {
-                    const cost = l.getBusinessUpgradeCost(biz);
-                    const canAfford = window.state.balance >= cost;
-                    if (canAfford) {
-                        upgradeBtn.className = "flex flex-col items-end transition-opacity duration-300 hover:scale-105 active:scale-95 cursor-pointer";
-                        upgradeBtn.children[1].classList.add('text-amber-500');
-                    } else {
-                        upgradeBtn.className = "flex flex-col items-end transition-opacity duration-300 opacity-40 cursor-not-allowed";
-                        upgradeBtn.children[1].classList.remove('text-amber-500');
-                    }
-                }
+                markShort(byId(`bizUpgradeBtn-${idx}`), window.state.balance < l.getBusinessUpgradeCost(biz));
 
-                const accumDisplay = document.getElementById(`bizAccumulatedIdx-${idx}`);
-                const collectBtn = document.getElementById(`bizCollectBtnIdx-${idx}`);
-                if (accumDisplay && collectBtn) {
-                    accumDisplay.innerText = this.formatMoney(biz.accumulated || 0);
-                    collectBtn.disabled = (biz.accumulated || 0) <= 0;
+                const accumulated = byId(`bizAccumulatedIdx-${idx}`);
+                const collect = byId(`bizCollectBtnIdx-${idx}`);
+                if (accumulated && collect) {
+                    accumulated.innerText = this.formatMoney(biz.accumulated || 0);
+                    collect.disabled = (biz.accumulated || 0) <= 0;
                 }
             });
-
-            // Sync Blueprints
             window.BUSINESS_DATA.forEach(b => {
-                const costArea = document.getElementById(`bizCostArea-${b.id}`);
-                const acquireText = document.getElementById(`bizAcquireText-${b.id}`);
-                if (costArea && acquireText) {
-                    const cost = l.getBusinessCost(b.id);
-                    const canAfford = window.state.balance >= cost;
-                    
-                    if (canAfford) {
-                        costArea.classList.remove('opacity-40');
-                        acquireText.classList.add('group-hover:text-amber-400');
-                    } else {
-                        costArea.classList.add('opacity-40');
-                        acquireText.classList.remove('group-hover:text-amber-400');
-                    }
-                }
+                const manager = byId(`managerBtn-${b.id}`);
+                if (manager) manager.disabled = window.state.balance < l.getManagerCost(b.id);
+                const buy = byId(`bizBuyBtn-${b.id}`);
+                if (buy) markShort(buy, window.state.balance < l.getBusinessCost(b.id));
             });
+            markShort(byId('startRetail'), window.state.balance < l.getBusinessCost('retail') && this.getOwned('retail').length < 3);
+            markShort(byId('startTaxi'), !window.state.taxi && window.state.balance < l.getTaxiOpenCost());
+            markShort(byId('startDealer'), !window.state.hasDealerLicense && window.state.balance < l.getLicenseCost());
+            this.syncBusinessScreen();
         }
 
-        // Dynamically toggle garage interaction buttons if any dependencies rely on rapid balance changes
-        if (window.state.activeTab === 'market') {
-            if (el.buyGarageBtn) {
-                const expansionCost = l.getGarageExpansionCost();
-                el.buyGarageBtn.disabled = window.state.balance < expansionCost;
+        if (window.state.activeTab === 'lifestyle') {
+            window.LIFESTYLE_ITEMS.forEach(item => markShort(byId(`lifeBuy-${item.id}`), window.state.balance < item.price));
+        }
+
+        if (this.isDealerOpen()) {
+            if (el.buyGarageBtn) el.buyGarageBtn.disabled = window.state.balance < l.getGarageExpansionCost();
+
+            (window.state.dealerCars || []).forEach((car, i) => {
+                const repair = byId(`repairBtn-${i}`);
+                if (repair) repair.disabled = window.state.balance < l.getRepairCost(car);
+            });
+            const garageFull = (window.state.dealerCars || []).length >= l.getGarageSlots();
+            (window.state.auctionCars || []).forEach((car, i) => {
+                const buy = byId(`auctionBuy-${i}`);
+                if (buy) buy.disabled = garageFull || window.state.balance < car.price;
+                const inspect = byId(`auctionInspect-${i}`);
+                if (inspect) inspect.disabled = car.inspected || window.state.balance < l.getInspectCost(car);
+            });
+
+            const auctionWait = l.getWaitLeft(window.state.nextAuctionAt, 30000);
+            if (el.browseAuctionsBtn) el.browseAuctionsBtn.disabled = auctionWait > 0;
+            if (el.browseAuctionsLabel) {
+                el.browseAuctionsLabel.innerText = auctionWait > 0
+                    ? `New auction in ${Math.ceil(auctionWait / 1000)}s`
+                    : 'Browse Auctions';
             }
-            if (window.state.dealerCars) {
-                window.state.dealerCars.forEach((car, i) => {
-                    const repairBtn = document.getElementById(`repairBtn-${i}`);
-                    if (repairBtn) {
-                        repairBtn.disabled = window.state.balance < 300;
-                    }
-                });
+            if (el.demandTimer) {
+                const demandWait = l.getWaitLeft(window.state.demandNextAt, 60000);
+                el.demandTimer.innerText = `changes in ${Math.ceil(demandWait / 1000)}s`;
             }
         }
 
-        const cVal = l.getClickValue();
-        if (el.clickValueDisplay) el.clickValueDisplay.innerText = `+$${cVal}`;
-        if (el.efficiencyDisplay) el.efficiencyDisplay.innerText = `Efficiency: Lvl ${cVal}`;
+        // Earnings can arrive while the Stats screen is open
+        if (window.state.activeTab === 'profile') this.renderProfile();
 
-        if (el.buyLicenseBtn) el.buyLicenseBtn.disabled = window.state.balance < 2500;
+        const clickValue = l.getClickValue();
+        if (el.clickValueDisplay) el.clickValueDisplay.innerText = `+${this.formatMoney(clickValue)}`;
+        if (el.efficiencyDisplay) el.efficiencyDisplay.innerText = `Efficiency: Lvl ${Math.round(clickValue / l.getPrestigeMultiplier())}`;
 
         if (el.buyCasinoBtn) el.buyCasinoBtn.disabled = window.state.balance < 10000;
-        const sBet = parseInt(el.slotsBetInput?.value) || 10;
-        const rBet = parseInt(el.rouletteBetInput?.value) || 10;
-        const bBet = parseInt(el.bjBetInput?.value) || 10;
 
-        if (el.spinSlotsBtn) el.spinSlotsBtn.disabled = window.state.balance < sBet || sBet < 10;
-        if (el.btnBetRed) el.btnBetRed.disabled = window.state.balance < rBet || rBet < 10;
-        if (el.btnBetBlack) el.btnBetBlack.disabled = window.state.balance < rBet || rBet < 10;
-        if (el.btnBetGreen) el.btnBetGreen.disabled = window.state.balance < rBet || rBet < 10;
-        if (el.btnBjDeal && (!window.state.blackjack || !window.state.blackjack.active)) {
-            el.btnBjDeal.disabled = window.state.balance < bBet || bBet < 10;
-        }
+        const slotsBet = parseInt(el.slotsBetInput?.value) || 10;
+        const rouletteBet = parseInt(el.rouletteBetInput?.value) || 10;
+        const blackjackBet = parseInt(el.bjBetInput?.value) || 10;
+        const { slots, roulette } = l.spinning;
+
+        if (el.spinSlotsBtn) el.spinSlotsBtn.disabled = slots || window.state.balance < slotsBet || slotsBet < 10;
+        [el.btnBetRed, el.btnBetBlack, el.btnBetGreen].forEach(button => {
+            if (button) button.disabled = roulette || window.state.balance < rouletteBet || rouletteBet < 10;
+        });
+        if (el.slotsBetInput) el.slotsBetInput.disabled = slots;
+        if (el.rouletteBetInput) el.rouletteBetInput.disabled = roulette;
+        el.betChips?.forEach(row => {
+            const locked = (row.dataset.chipsFor === 'slotsBetInput' && slots) ||
+                (row.dataset.chipsFor === 'rouletteBetInput' && roulette);
+            Array.from(row.children).forEach(chip => { chip.disabled = locked; });
+        });
+
+        const handActive = Boolean(window.state.blackjack && window.state.blackjack.active);
+        if (el.btnBjDeal && !handActive) el.btnBjDeal.disabled = window.state.balance < blackjackBet || blackjackBet < 10;
+        if (el.btnBjHit) el.btnBjHit.disabled = !handActive;
+        if (el.btnBjStand) el.btnBjStand.disabled = !handActive;
+        if (el.btnBjDouble) el.btnBjDouble.disabled = !l.canDouble();
 
         this.updateDealerBadge();
     },
 
-    showSaveIndicator() {
+    showSaveIndicator(saved = true) {
         const el = this.elements;
-        if (!el.saveIndicator || !el.saveDot) return;
+        if (!el.saveIndicator || !el.saveDot || !el.saveLabel) return;
 
-        el.saveIndicator.childNodes[1].textContent = " Just Saved";
-        el.saveDot.classList.replace('bg-slate-600', 'bg-emerald-500');
-        el.saveIndicator.classList.replace('text-slate-600', 'text-emerald-500');
+        clearTimeout(this.saveIndicatorTimer);
+        el.saveLabel.textContent = saved ? 'Saved' : 'Not saved';
+        el.saveDot.classList.remove('ok', 'fail');
+        el.saveDot.classList.add(saved ? 'ok' : 'fail');
 
-        setTimeout(() => {
-            el.saveIndicator.childNodes[1].textContent = " Synced";
-            el.saveDot.classList.replace('bg-emerald-500', 'bg-slate-600');
-            el.saveIndicator.classList.replace('text-emerald-500', 'text-slate-600');
-        }, 1500);
+        if (!saved) return; // leave the warning up until a save succeeds
+        this.saveIndicatorTimer = setTimeout(() => el.saveDot.classList.remove('ok'), 1500);
     },
 
     triggerBalancePulse(color) {
-        const el = this.elements;
-        if (!el.balanceDisplay) return;
-        el.balanceDisplay.classList.remove('animate-flash-green', 'animate-flash-red');
-        void el.balanceDisplay.offsetWidth;
-        el.balanceDisplay.classList.add(color === 'green' ? 'animate-flash-green' : 'animate-flash-red');
+        const balance = this.elements.balanceDisplay;
+        if (!balance) return;
+        balance.classList.remove('flash-good', 'flash-bad');
+        void balance.offsetWidth;
+        balance.classList.add(color === 'green' ? 'flash-good' : 'flash-bad');
     },
 
-    showToast(msg) {
-        const el = this.elements;
-        if (!el.toastContainer) return;
+    showToast(message, tone = 'bad') {
+        const container = this.elements.toastContainer;
+        if (!container) return;
         const toast = document.createElement('div');
-        toast.className = 'bg-red-900 border border-red-500 text-white px-4 py-2 rounded-xl shadow-lg font-bold text-sm tracking-wide animate-toast pointer-events-none flex items-center gap-2';
-        toast.innerHTML = `<svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>${msg}`;
-        el.toastContainer.appendChild(toast);
+        toast.className = `toast toast-${tone}`;
+        toast.innerHTML = this.icon(tone === 'good' ? 'check' : 'alert');
+        const text = document.createElement('span');
+        text.textContent = message;
+        toast.appendChild(text);
+        container.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     },
 
     createParticle(e, text) {
         if (!this.particleContainer) {
             this.particleContainer = document.createElement('div');
-            this.particleContainer.className = 'absolute inset-0 pointer-events-none z-50 overflow-hidden';
+            this.particleContainer.className = 'particle-layer';
             document.body.appendChild(this.particleContainer);
         }
 
-        const particle = document.createElement('div');
-        particle.innerText = text;
-
-        // Randomize slight colors and sizes for better game feel
-        const colors = ['text-emerald-400', 'text-amber-400', 'text-yellow-300'];
-        const rColor = colors[Math.floor(Math.random() * colors.length)];
-
-        // We use a custom inline style for starting position and CSS variables for animation
-        particle.className = `absolute font-black text-xl drop-shadow-md pointer-events-none z-50 ${rColor}`;
-
-        // Support enter key presses (client 0,0) by falling back to the center of the button
-        let startX = e.clientX;
-        let startY = e.clientY;
-
-        if (e.clientX === 0 && e.clientY === 0 && e.target) {
+        // Keyboard presses report 0,0, so use the middle of the button
+        let x = e.clientX;
+        let y = e.clientY;
+        if (x === 0 && y === 0 && e.target) {
             const rect = e.target.getBoundingClientRect();
-            startX = rect.left + rect.width / 2;
-            startY = rect.top + rect.height / 2;
+            x = rect.left + rect.width / 2;
+            y = rect.top + rect.height / 2;
         }
 
-        // Slight randomization so multiple clicks don't perfectly overlap
-        const rx = (Math.random() - 0.5) * 40;
-        const ry = (Math.random() - 0.5) * 20;
-
-        particle.style.left = `${startX + rx}px`;
-        particle.style.top = `${startY + ry}px`;
-
-        // CSS Animation logic
-        particle.style.animation = 'floatUp 0.8s ease-out forwards';
-
-        // Add dynamic keyframes style once if not present
-        if (!document.getElementById('particle-styles')) {
-            const style = document.createElement('style');
-            style.id = 'particle-styles';
-            style.innerHTML = `
-                @keyframes floatUp {
-                    0% {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                    50% {
-                        opacity: 0.8;
-                        transform: translateY(-40px) scale(1.1);
-                    }
-                    100% {
-                        opacity: 0;
-                        transform: translateY(-80px) scale(0.9);
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.innerText = text;
+        // A little scatter so quick taps do not stack
+        particle.style.left = `${x - 30 + (Math.random() - 0.5) * 40}px`;
+        particle.style.top = `${y - 30 + (Math.random() - 0.5) * 20}px`;
 
         this.particleContainer.appendChild(particle);
         setTimeout(() => particle.remove(), 800);

@@ -24,14 +24,14 @@ window.initThreeJS = function() {
     particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
     
     const material = new THREE.PointsMaterial({
-        size: 0.25, color: 0x10b981, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending 
+        size: 0.35, color: 0xf2a900, transparent: true, opacity: 0.45 // gold, visible on light and dark
     });
     const particlesMesh = new THREE.Points(particlesGeometry, material);
     scene.add(particlesMesh);
 
     // Glow Effect Background Plane
     const glowMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x10b981, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false 
+        color: 0xffc93c, transparent: true, opacity: 0, depthWrite: false
     });
     const glowMesh = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), glowMaterial);
     glowMesh.position.z = -15; // behind the particles
@@ -70,7 +70,7 @@ window.initThreeJS = function() {
             }
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
             const burstMat = new THREE.PointsMaterial({ 
-                size: 0.5, color: 0x34d399, transparent: true, opacity: 1, blending: THREE.AdditiveBlending 
+                size: 0.9, color: 0xffb300, transparent: true, opacity: 1
             });
             const burstMesh = new THREE.Points(geo, burstMat);
             scene.add(burstMesh);
