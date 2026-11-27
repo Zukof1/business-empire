@@ -56,7 +56,7 @@ const ui = {
             'bjControlsDeal', 'bjControlsPlay', 'btnBjDeal', 'btnBjHit', 'btnBjStand', 'btnBjDouble',
             'btnBjReset', 'bjBetInput', 'bjBetContainer',
             'statRank', 'statTotalEarnings', 'statTotalClicks', 'statCasinoPL',
-            'rankProgressBar', 'rankProgressText', 'prestigeBtn', 'prestigeInfo', 'hardResetBtn'
+            'rankProgressBar', 'rankProgressText', 'prestigeBtn', 'prestigeInfo', 'hardResetBtn', 'taxBtn'
         ];
         this.elements = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
         this.elements.betChips = document.querySelectorAll('[data-chips-for]');
@@ -97,6 +97,7 @@ const ui = {
         el.confirmModal?.addEventListener('click', e => { if (e.target === el.confirmModal) this.answer(false); });
         document.addEventListener?.('keydown', e => { if (e.key === 'Escape') this.answer(false); });
         el.prestigeBtn?.addEventListener('click', () => l.prestige());
+        el.taxBtn?.addEventListener('click', () => l.toggleTaxes());
 
         // Casino sub-navigation
         el.btnOpenSlots?.addEventListener('click', () => this.showCasinoView('slots'));
@@ -1410,6 +1411,13 @@ const ui = {
         if (el.statCasinoPL) {
             el.statCasinoPL.innerText = `${casino >= 0 ? '+' : '-'}${this.formatMoney(Math.abs(casino))}`;
             el.statCasinoPL.className = `stat-figure ${casino >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+        }
+
+        if (el.taxBtn) {
+            const on = window.logic.taxesOn();
+            el.taxBtn.innerText = on ? 'On' : 'Off';
+            el.taxBtn.classList[on ? 'add' : 'remove']('btn-yellow');
+            el.taxBtn.setAttribute('aria-pressed', on);
         }
 
         if (el.prestigeBtn) {

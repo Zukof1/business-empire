@@ -6,10 +6,10 @@ Written 27 November 2026, at the end of a long session. Check anything important
 
 - **Project:** `C:\Users\faizy\.gemini\antigravity\scratch\business-empire`, a phone-first idle business game in plain HTML, CSS and JavaScript.
 - **Repo:** `https://github.com/Zukof1/business-empire.git`, branch `main`.
-- **Live site:** `https://business-empire-ashy.vercel.app/` still serves the **old** game. It never saves progress and has no Blackjack Hit button.
-- **Committed, not pushed:** items 1 to 8 below are in local commit `a589267`, and Rental Properties (item 9) is in the commit after it. Both are ahead of `origin/main` (`ef58893`). The large photo originals were left out.
+- **Live site:** `https://business-empire-ashy.vercel.app/`. Check that it shows the latest push (the script tags should read the current `?v=` number).
+- **Committed and pushed:** items 1 to 9 below and the tax switch on Stats, to `main`. The large photo originals were left out.
 - Do not commit or push unless the owner asks; suggesting a commit early is sensible.
-- **Tests:** `node --test tests/*.test.js` gave **179 passing** (Node 24).
+- **Tests:** `node --test tests/*.test.js` gave **186 passing** (Node 24).
 - **Not done:** nothing has been tried on a real phone, and pacing has not been played through.
 
 ## What was built
@@ -45,7 +45,7 @@ Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` an
 
 - `window.state` and the `state` variable in `state.js` must stay **the same object**. Load with `Object.assign`, never by replacing it.
 - Do not add script files without updating `buildBundle.js`, which lists them by name.
-- Bump the `?v=` number on the four script tags when scripts change (currently `v=18`).
+- Bump the `?v=` number on the four script tags when scripts change (currently `v=19`).
 - Ask before risky actions with `logic.ask({title, message, yes, danger}, action)`. Never call `confirm()` directly. Re-check conditions inside the action, because the game keeps running while the box is open.
 - Time rules: wall-clock timestamps for auctions, demand, shop earnings, rent and applicant waits; taxis, home wear, departures and home prices use the frame time, capped at 1 second, so they never run while the game is away.
 - Element ids are used by tests and by per-frame updates. Rename with care.
@@ -65,6 +65,7 @@ Designs and plans for items 2, 3, 5, 6 and 9 are in `docs/superpowers/specs/` an
 | Lifestyle | 12 items in Style, Homes, Toys, Experiences; experiences repeat; kept through prestige; earns nothing |
 | Casino | Slots: triple 7s 30×, other triples 10×. Green roulette 14×. Blackjack has double down |
 | Prestige | Needs $1M lifetime earnings, adds +10% income |
+| Taxes | 0.5% of the balance each minute of play. A switch on Stats turns them off; on by default, kept through prestige |
 
 Exact values are the constants at the top of `logic.js`.
 
@@ -99,8 +100,7 @@ The owner makes them in Gemini from prompts we write and saves them under the na
 
 ## GitHub access
 
-A token was stored in the remote URL. It was removed from the URL, and the only active classic token on the account was deleted. GitHub does not show token values, so it could not be matched for certain. The first push should ask the owner to sign in.
-
+A token was stored in the remote URL. It was removed from the URL, and the only active classic token on the account was deleted. GitHub does not show token values, so it could not be matched for certain.
 ## Working with the owner
 
 - Show options or mockups for look-and-feel choices, and agree rules and prices before building a feature.

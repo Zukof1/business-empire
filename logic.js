@@ -1691,6 +1691,17 @@ const logic = {
         });
     },
 
+    // Saved as "off", so older saves keep paying tax. Prestige leaves the choice alone.
+    taxesOn() {
+        return !window.state.taxesOff;
+    },
+
+    toggleTaxes() {
+        window.state.taxesOff = this.taxesOn();
+        window.ui?.renderProfile();
+        window.saveGame();
+    },
+
     startGameLoop() {
         let lastFrameTime = performance.now();
 
@@ -1701,8 +1712,8 @@ const logic = {
             // Optional safeguard
             if (!window.state) return;
 
-            // Operations & Taxes
-            timeSinceLastTax += deltaTime;
+            // Operations & Taxes. Held at zero while off, so switching back on starts a fresh minute.
+            timeSinceLastTax = this.taxesOn() ? timeSinceLastTax + deltaTime : 0;
             if (timeSinceLastTax >= TAX_INTERVAL_MS) {
                 timeSinceLastTax = 0;
                 if (window.state.balance > 0) {
